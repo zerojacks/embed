@@ -1,0 +1,15 @@
+{
+  "name": "embed_core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "embed_core_bg.wasm",
+    "embed_core.js",
+    "embed_core.d.ts"
+  ],
+  "main": "embed_core.js",
+  "types": "embed_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

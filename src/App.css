@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: all;
+}
+
+/* 自定义CSS变量 */
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-content: #ffffff;
+  --color-secondary: #64748b;
+  --color-secondary-content: #ffffff;
+  --color-accent: #10b981;
+  --color-accent-content: #ffffff;
+  --color-neutral: #374151;
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;
+  --color-base-200: #f8fafc;
+  --color-base-300: #e2e8f0;
+  --color-base-content: #1f2937;
+  --color-info: #0ea5e9;
+  --color-info-content: #ffffff;
+  --color-success: #22c55e;
+  --color-success-content: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-content: #ffffff;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+}
+
+/* 自定义样式 */
+.treetableview {
+  @apply bg-base-100 rounded-lg shadow-sm;
+}
+
+.no-pointer-events {
+  pointer-events: none;
+}
+
+/* 确保 WASM 相关的样式 */
+.font-mono {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+/* 协议解析器特定样式 */
+.protocol-analyzer {
+  @apply min-h-screen bg-base-200;
+}
+
+/* 面板调整手柄样式 */
+.resize-handle {
+  @apply bg-base-300 hover:bg-primary/50 transition-colors;
+}
+
+/* 加载动画增强 */
+.loading-enhanced {
+  @apply animate-pulse;
+}
+
+/* 树形表格特定样式 */
+.tree-table-header {
+  @apply sticky top-0 z-10 bg-base-200 text-base-content;
+}
+
+.tree-table-row {
+  @apply hover:bg-base-200/50 transition-colors;
+}
+
+.tree-table-cell {
+  @apply p-2;
+}
+
+/* 移除表格边框 */
+.treetableview table {
+  border: none !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.treetableview table th,
+.treetableview table td {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.treetableview table thead tr {
+  border: none !important;
+}
+
+.treetableview table tbody tr {
+  border: none !important;
+}
+
+/* 覆盖 DaisyUI 的默认表格样式 */
+.treetableview .table {
+  border: none !important;
+}
+
+.treetableview .table th {
+  border: none !important;
+  border-bottom: none !important;
+}
+
+.treetableview .table td {
+  border: none !important;
+  border-bottom: none !important;
+}
+
+/* 上下文菜单样式 */
+.context-menu {
+  @apply fixed bg-base-100 border border-base-300 shadow-lg rounded-box z-50;
+}
+
+/* 协议徽章样式 */
+.protocol-badge {
+  @apply badge badge-primary gap-1 font-medium;
+}
+
+/* 状态指示器 */
+.status-indicator {
+  @apply flex items-center gap-2;
+}
+
+.status-dot {
+  @apply w-2 h-2 rounded-full animate-pulse;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .protocol-analyzer {
+    @apply text-sm;
+  }
+  
+  .navbar {
+    @apply flex-col gap-2 h-auto py-2;
+  }
+  
+  .tabs {
+    @apply tabs-sm;
+  }
+}
