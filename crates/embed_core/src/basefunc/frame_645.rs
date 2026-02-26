@@ -3,7 +3,7 @@ use crate::basefunc::frame_fun::FrameFun;
 use crate::basefunc::protocol::{FrameAnalisyic, ProtocolInfo};
 use crate::config::xmlconfig::ProtocolConfigManager;
 use serde_json::Value;
-
+use tracing::info;
 pub struct Frame645;
 
 impl Frame645 {
@@ -563,7 +563,7 @@ impl Frame645 {
                 pos += 5;
             }
 
-            println!(
+            info!(
                 "pos={},sublength={} data_item_str={} all_length={}",
                 pos, sublength, data_item_str, all_length
             );

@@ -3,7 +3,7 @@ use crate::basefunc::frame_fun::FrameFun;
 use crate::basefunc::protocol::{FrameAnalisyic, ProtocolInfo};
 use crate::config::xmlconfig::ProtocolConfigManager;
 use serde_json::Value;
-
+use tracing::info;
 const FRAME_START: u8 = 0x68;
 const FRAME_END: u8 = 0x16;
 
@@ -274,7 +274,7 @@ impl FrameMoudle {
         let di = &data_content[0..4];
         let di_data = &data_content[4..];
         let data_item = FrameFun::get_data_str_reverser(di);
-        println!(
+        info!(
             "data_item: {} protocol: {} region: {} dir: {}",
             data_item, protocol, region, dir
         );
@@ -283,7 +283,7 @@ impl FrameMoudle {
         {
             let pos: usize = 0;
             let length_ele = data_item_elem.get_child_text("length");
-            println!(
+            info!(
                 "data_item_elem: {:?}, length_ele: {:?}",
                 data_item_elem, length_ele
             );

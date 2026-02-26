@@ -318,12 +318,12 @@ impl FrameCsg {
             return false;
         }
         if frame[1] != frame[3] || frame[2] != frame[4] {
-            println!("frame err");
+            info!("frame err");
             return false;
         }
         let frame_length = ((frame[2] as usize) << 8) | frame[1] as usize;
         if frame_length + 8 != frame.len() {
-            println!("length err");
+            info!("length err");
             return false;
         }
         if frame[frame.len() - 1] != 0x16 {
@@ -353,7 +353,7 @@ impl FrameCsg {
 
         let afn = frame[14];
         let (dir, prm) = Self::analysic_csg_head_frame(frame, result_list, index);
-        println!("dir: {:?}, prm: {:?}", dir, prm);
+        info!("dir: {:?}, prm: {:?}", dir, prm);
         let protocol = ProtocolInfo::ProtocolCSG13.name().to_string();
         match afn {
             0x00 => Self::analysic_csg_ack_frame(
@@ -517,7 +517,7 @@ impl FrameCsg {
             None,
             None,
         );
-        println!("control_data: {:?}", control_data);
+        info!("control_data: {:?}", control_data);
         let (contro_result, result_str, dir, prm) =
             Self::get_control_code_str(control_data, start_pos);
 
@@ -650,12 +650,12 @@ impl FrameCsg {
     pub fn get_control_code_str(control: u8, start_pos: usize) -> (Vec<Value>, String, u8, u8) {
         let mut contro_result: Vec<Value> = Vec::new();
         let binary_array: Vec<u8> = FrameFun::get_bit_array(control);
-        println!("binary_array: {:?}", binary_array);
+        info!("binary_array: {:?}", binary_array);
         let dir = binary_array[0];
         let prm = binary_array[1];
         let acd = binary_array[2];
         let fcv = binary_array[3];
-        println!(
+        info!(
             "dir: {:?}, prm: {:?}, acd: {:?}, fcv: {:?}",
             dir, prm, acd, fcv
         );
@@ -1075,7 +1075,7 @@ impl FrameCsg {
         let left_length = if with_time { total_len - 6 } else { total_len };
         while total_len > pos {
             if pos + 4 > total_len {
-                println!("ddddd pos + 4:{:?} total_len {:?}", pos + 4,total_len);
+                info!("ddddd pos + 4:{:?} total_len {:?}", pos + 4,total_len);
                 if pos != 0 {
                     return true;
                 }
@@ -1100,7 +1100,7 @@ impl FrameCsg {
                     } else {
                         sub_length_cont.parse::<usize>().unwrap()
                     };
-                    println!("sub_length:{:?} pos{:?} with_time{:?}", sub_length,pos,with_time);
+                    info!("sub_length:{:?} pos{:?} with_time{:?}", sub_length,pos,with_time);
                     pos += sub_length + 6;
                     pos += 5;
                     if (left_length - 6) % (sub_length + 5) == 0 {
@@ -1108,15 +1108,15 @@ impl FrameCsg {
                     }
                     
                 } else {
-                    println!("aaaaa");
+                    info!("aaaaa");
                     return true;
                 }
             } else {
-                println!("bbbbbbb");
+                info!("bbbbbbb");
                 return true;
             }
         }
-        println!("ccccccc");
+        info!("ccccccc");
         false
     }
 
@@ -1130,7 +1130,7 @@ impl FrameCsg {
         region: &str,
         dir: Option<u8>,
     ) -> bool {
-        println!(
+        info!(
             "guest_is_exit_pw length{:?} pw_data{:?}",
             length, data_segment
         );
@@ -1200,11 +1200,11 @@ impl FrameCsg {
         let template_element = element.get_child("type");
         let rules = element.get_child_text("lengthrule");
         if all_items.is_empty() {
-            println!("template_element:{:?} rules:{:?}", template_element, rules);
+            info!("template_element:{:?} rules:{:?}", template_element, rules);
             if let Some(template_element) = template_element {
                 if let Some(rules) = rules {
                     if Self::is_valid_expression(&rules) {
-                        println!("rules:{:?}", rules);
+                        info!("rules:{:?}", rules);
                         return Self::calculate_unknown_length(
                             element,
                             data,
@@ -1214,7 +1214,7 @@ impl FrameCsg {
                             dir,
                         );
                     } else {
-                        println!("rules:{:?} is not valid", rules);
+                        info!("rules:{:?} is not valid", rules);
                     }
                 } else {
                     if let Some(data_type) = template_element.get_value().map(|s| s.to_uppercase())
@@ -1313,7 +1313,7 @@ impl FrameCsg {
         let operator_mapping = HashMap::from([("+", '+'), ("-", '-'), ("*", '*'), ("/", '/')]);
         let mut sub_length = 0;
         let pattern = Regex::new(r"^RANGE\(([^)]+)\)$").unwrap();
-        println!(
+        info!(
             "data_subitem_elem:{:?} rules:{:?}",
             data_subitem_elem, rules
         );
@@ -1323,7 +1323,7 @@ impl FrameCsg {
             if let Some(captures) = pattern.captures(&rules) {
                 // Get the captured string
                 let match_string = captures.get(1).unwrap().as_str();
-                println!("match_string:{:?}", match_string);
+                info!("match_string:{:?}", match_string);
                 if let Some(vaule) = length_map.get(match_string) {
                     let vaule_data = data_segment[(vaule.0 - vaule.1)..vaule.0][0];
                     let find_data = &data_segment[vaule.0..];
@@ -1356,20 +1356,20 @@ impl FrameCsg {
                     _ => *operator_mapping.get(operator_part).unwrap_or(&'?'),
                 };
 
-                println!(
+                info!(
                     "number_part:{:?} operator_part:{:?} text_part:{:?}",
                     number_part, operator_part, text_part
                 );
             } else {
-                println!("Invalid rule format");
+                info!("Invalid rule format");
                 return sub_length;
             }
-            println!("length_map:{:?}", length_map);
+            info!("length_map:{:?}", length_map);
             let sub_value = if text_part.chars().all(char::is_numeric) {
                 text_part.parse::<usize>().unwrap_or(0)
             } else {
                 if let Some(vaule) = length_map.get(text_part) {
-                    println!(
+                    info!(
                         "value {:?} vaule.0 {:?} vaule.1 {:?} data_segment {:?}",
                         vaule, vaule.0, vaule.1, data_segment
                     );
@@ -1390,21 +1390,21 @@ impl FrameCsg {
                     );
                     let target_result = FrameFun::find_frame_in_data_list(&result, text_part);
                     let mut sub_value_str = String::new();
-                    println!("target_result:{:?}", target_result);
+                    info!("target_result:{:?}", target_result);
                     if let Some(target_results) = target_result {
                         for item in target_results {
                             if let Some(sub_value) = item.get("description") {
                                 if let Some(sub_value_str_temp) = sub_value.as_str() {
                                     sub_value_str = sub_value_str_temp.to_string();
                                 } else {
-                                    println!("Description is not a string.");
+                                    info!("Description is not a string.");
                                 }
                             } else {
-                                println!("No description found in item.");
+                                info!("No description found in item.");
                             }
                         }
                     } else {
-                        println!("No matching frames found.");
+                        info!("No matching frames found.");
                     }
 
                     // Extract number from sub_value using regex
@@ -1426,10 +1426,10 @@ impl FrameCsg {
 
             // Parse number_part to usize
             let decimal_number = number_part.parse::<usize>().unwrap_or_else(|_| {
-                println!("Failed to convert to integer: {}", number_part);
+                info!("Failed to convert to integer: {}", number_part);
                 0
             });
-            println!(
+            info!(
                 "decimal_number:{:?} sub_value:{:?}",
                 decimal_number, sub_value
             );
@@ -1451,7 +1451,7 @@ impl FrameCsg {
                 None,
             )
         }
-        println!("calculate_unknown_length Sub length: {}", sub_length);
+        info!("calculate_unknown_length Sub length: {}", sub_length);
         sub_length
     }
 
@@ -1471,14 +1471,14 @@ impl FrameCsg {
             Self::recalculate_sub_length(&mut item_element, data_segment, protocol, region, dir);
 
         if (length + 6) > data_segment.len() {
-            println!(
+            info!(
                 "length:{:?} data_segment.len():{:?}",
                 length,
                 data_segment.len()
             );
             return false;
         }
-        println!(
+        info!(
             "data_segment[length..length + 6]:{:?} data_time:{:?}",
             &data_segment[length..length + 6],
             data_time
@@ -1492,13 +1492,13 @@ impl FrameCsg {
         }
         let next_item = FrameFun::get_data_str_reverser(&data_segment[2..6]);
         if Some(next_item.clone()) == item_element.get_attribute("id").cloned() {
-            println!("next_item:{:?} item_element:{:?}", next_item, item_element);
+            info!("next_item:{:?} item_element:{:?}", next_item, item_element);
             return false;
         }
         let data_item_elem =
             ProtocolConfigManager::get_config_xml(&next_item, protocol, region, dir);
         if let Some(data_item_elem) = data_item_elem {
-            println!("data_item_elem:{:?}", data_item_elem);
+            info!("data_item_elem:{:?}", data_item_elem);
             return false;
         }
         false
@@ -2192,7 +2192,7 @@ impl FrameCsg {
                     } else {
                         data_segment[pos + 4..].len()
                     };
-                    println!(
+                    info!(
                         "sub_length: {:?} data_segment: {:?}",
                         sub_length, data_segment
                     );
@@ -2370,7 +2370,7 @@ impl FrameCsg {
 
         let data_segment = &valid_data_segment[..length];
         let mut pw = false;
-        println!("write_csg_frame:---------------");
+        info!("write_csg_frame:---------------");
         while pos < length {
             let da = &data_segment[pos..pos + 2];
             let item = &data_segment[pos + 2..pos + 6];
@@ -2423,7 +2423,7 @@ impl FrameCsg {
                     (sub_length, sub_datament)
                 };
                 data_item_elem.update_value("length", sub_length.to_string());
-                // println!("sub_datament: {:?}", data_item_elem);
+                // info!("sub_datament: {:?}", data_item_elem);
                 if dir == 0 || prm == 1 {
                     item_data = FrameAnalisyic::prase_data(
                         &mut data_item_elem,
@@ -2885,7 +2885,7 @@ impl FrameCsg {
                                 None,
                             );
                             let new_sub_datament = &data_segment[pos + 4..pos + 4 + new_sub_length];
-                            println!(
+                            info!(
                                 "new_sub_datament:{:?} sub_length:{:?}",
                                 new_sub_datament, new_sub_length
                             );
@@ -3458,7 +3458,7 @@ impl FrameCsg {
                             (new_sub_length, new_datament)
                         };
                         data_item_elem.update_value("length", sub_length.to_string());
-                        println!("read_param:{:?}", sub_datament);
+                        info!("read_param:{:?}", sub_datament);
                         item_data = FrameAnalisyic::prase_data(
                             &mut data_item_elem,
                             protocol,
@@ -3700,7 +3700,7 @@ impl FrameCsg {
             );
 
             let expire_item = &frame[27..31];
-            println!("expire_item:{:?}", expire_item);
+            info!("expire_item:{:?}", expire_item);
             let expire_data_item = FrameFun::get_data_str_reverser(expire_item);
             let data_item_elem = ProtocolConfigManager::get_config_xml(
                 &expire_data_item,
@@ -3708,7 +3708,7 @@ impl FrameCsg {
                 region,
                 Some(dir),
             );
-            println!("data_item_elem:{:?}", data_item_elem);
+            info!("data_item_elem:{:?}", data_item_elem);
             if let Some(data_item_elem) = data_item_elem {
                 pncount = frame[23];
                 item_count = frame[24];
@@ -4092,7 +4092,7 @@ impl FrameCsg {
             match (|| -> Result<(), CustomError> {
                 let da = &data_segment[pos..pos + 2];
                 let item = &data_segment[pos + 2..pos + 6];
-                println!("da: {:?}", da);
+                info!("da: {:?}", da);
                 let point_str = Self::prase_da_data([da[0], da[1]]);
                 let data_item = FrameFun::get_data_str_reverser(item);
 
@@ -4439,7 +4439,7 @@ impl FrameCsg {
                 None,
             );
             pos += 4;
-            println!(
+            info!(
                 "point_str{:?} dis_data_identifier{:?}",
                 point_str, dis_data_identifier
             );
@@ -5059,7 +5059,7 @@ impl FrameCsg {
 
         let data_segment = &valid_data_segment[..length];
         let mut pw = false;
-        println!(
+        info!(
             "data_segment: {:?}, tpv: {:?}, pw_data: {:?}, length: {}",
             data_segment, tpv, pw_data, length
         );
@@ -5115,7 +5115,7 @@ impl FrameCsg {
                     (sub_length, sub_datament)
                 };
                 data_item_elem.update_value("length", sub_length.to_string());
-                // println!("sub_datament: {:?}", data_item_elem);
+                // info!("sub_datament: {:?}", data_item_elem);
                 item_data = FrameAnalisyic::prase_data(
                     &mut data_item_elem,
                     protocol,
@@ -5164,7 +5164,7 @@ impl FrameCsg {
                     None,
                 );
             }
-            println!("pos: {}, sub_length: {}", pos, sub_length);
+            info!("pos: {}, sub_length: {}", pos, sub_length);
             pos += sub_length + 4;
             num += 1;
             if length - pos == 16 {

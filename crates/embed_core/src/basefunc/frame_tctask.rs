@@ -5,7 +5,7 @@ use crate::config::xmlconfig::ProtocolConfigManager;
 use crate::basefunc::frame_csg::FrameCsg;
 use crate::basefunc::protocol::{FrameAnalisyic, ProtocolInfo};
 use serde_json::Value;
-
+use tracing::info;
 const MS_TYPE_ALL_USER: u8 = 0x01; //全部用户类型*/
 const MS_TYPE_A_SET_OF_USER: u8 = 0x02; //一组用户类型 */
 const MS_TYPE_A_SET_OF_ADDRESSES: u8 = 0x03; //一组用户地址*/
@@ -82,7 +82,7 @@ impl TCMeterTask {
         task_content: &[u8],
         start_pos: usize,
     ) -> (usize, String, Vec<Value>) {
-        println!("get_ms_len_new task_content{:?}", task_content);
+        info!("get_ms_len_new task_content{:?}", task_content);
         let region = "南网";
         let protocol = ProtocolInfo::ProtocolMS.name().to_string();
         let ms_str = format!("{:02X}", ms_type);
@@ -120,7 +120,7 @@ impl TCMeterTask {
                 (sub_length, sub_datament)
             };
             data_item_elem.update_value("length", sub_length.to_string());
-            println!("get_ms_len_new {:?} {:?}", sub_datament, sub_length);
+            info!("get_ms_len_new {:?} {:?}", sub_datament, sub_length);
             item_data = FrameAnalisyic::prase_data(
                 &mut data_item_elem,
                 &protocol,

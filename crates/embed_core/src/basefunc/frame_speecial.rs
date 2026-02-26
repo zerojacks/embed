@@ -6,7 +6,7 @@ use crate::basefunc::protocol::{AnalysicErr, FrameAnalisyic};
 use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement};
 use serde_json::Value;
 use std::error::Error;
-
+use tracing::info;
 const MS_TYPE_ALL_USER: u8 = 0x01; //全部用户类型*/
 const MS_TYPE_A_SET_OF_USER: u8 = 0x02; //一组用户类型 */
 const MS_TYPE_A_SET_OF_ADDRESSES: u8 = 0x03; //一组用户地址*/
@@ -90,7 +90,7 @@ impl SpcialFrame {
                     let (data_item_elem_opt, cur_data_item) =
                         FrameCsg::try_get_item_and_point(item, protocol, region, Some(dir));
 
-                    println!(
+                    info!(
                         "data_item:{:?} {:?} {:?}",
                         data_item_elem_opt, data_segment, item
                     );

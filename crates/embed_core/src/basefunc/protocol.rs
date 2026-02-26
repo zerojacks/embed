@@ -8,6 +8,7 @@ use crate::basefunc::frame_tctask::TCMeterTask;
 use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement};
 use regex::Regex;
 use serde_json::{json, Value};
+use tracing::info;
 
 #[derive(Debug)]
 pub enum AnalysicErr {
@@ -35,7 +36,7 @@ impl ProtocolInfo {
             ProtocolInfo::ProtocolDLT64507 => "DLT/645-2007",
             ProtocolInfo::ProtocolMoudle => "moudle",
             ProtocolInfo::ProtocolMS => "MS",
-            ProtocolInfo::ProtocolHis => "His"
+            ProtocolInfo::ProtocolHis => "His",
         }
     }
 }
@@ -92,12 +93,12 @@ impl FrameAnalisyic {
         let parsed_data: Vec<Value>;
 
         // 假设 ConfigManager 是你自己的结构体，并且 get_config_xml 是其方法
-        println!(
+        info!(
             "prase_data data_item_elem: {:?} data_segment{:?}",
             data_item_elem, data_segment
         );
         let need_delete = protocol == ProtocolInfo::ProtocolDLT64507.name();
-        println!("need_delete: {:?}", need_delete);
+        info!("need_delete: {:?}", need_delete);
         parsed_data = Self::prase_data_item(
             data_item_elem,
             data_segment,
@@ -142,7 +143,7 @@ impl FrameAnalisyic {
             data_str
         };
 
-        println!(
+        info!(
             "prase_data_item data_segment{:?} {:?}",
             data_segment, data_item_elem
         );
@@ -159,7 +160,7 @@ impl FrameAnalisyic {
             );
             sub_item_result = Some(sub_result);
             cur_length = length;
-            println!(
+            info!(
                 "sub_item_result {:?} cur_length: {:?}",
                 sub_item_result, cur_length
             );
@@ -304,7 +305,7 @@ impl FrameAnalisyic {
             } else {
                 subitem_length = sub_data_segment.len();
             }
-            println!(
+            info!(
                 "sub_data_segment:{:?} subitem_length:{} data_item_elem{:?}",
                 sub_data_segment, subitem_length, data_item_elem
             );
@@ -475,7 +476,7 @@ impl FrameAnalisyic {
             region,
             dir,
         );
-        println!("parse_value: {:?}", parse_value);
+        info!("parse_value: {:?}", parse_value);
         let re = Regex::new(r"^([^\s]+)\s").unwrap();
         let value = if let Some(cap) = re.captures(&parse_value) {
             cap.get(1)
@@ -499,11 +500,16 @@ impl FrameAnalisyic {
         // 获取所有 `value` 子元素
         let value_elements = data_item_elem.get_items("value");
         let (value_str, element) = Self::find_value_from_elements(&value_elements, &value);
-        
+
         value_name = if value_str.is_none() {
             format!("[{}]: {}", value_name, parse_value.clone())
         } else {
-            format!("[{}]: {}-{}", value_name, parse_value.clone(), value_str.unwrap())
+            format!(
+                "[{}]: {}-{}",
+                value_name,
+                parse_value.clone(),
+                value_str.unwrap()
+            )
         };
         // 获取 color 属性并使用 `.cloned()` 将 Option<&String> 转换为 Option<String>
         color = data_item_elem.get_attribute("color").cloned();
@@ -518,7 +524,7 @@ impl FrameAnalisyic {
     ) -> (Option<String>, Option<XmlElement>) {
         let mut found_value = search_value.to_string();
 
-        println!("value_elements: {:?}", found_value);
+        info!("value_elements: {:?}", found_value);
         // First pass: Look for a key that matches `search_value`
         for value_elem in value_elements.iter() {
             if let Some(key) = value_elem.get_attribute("key") {
@@ -578,12 +584,12 @@ impl FrameAnalisyic {
                 region,
                 dir,
             );
-            println!("subitem_value_option: {:?}", subitem_value_option);
+            info!("subitem_value_option: {:?}", subitem_value_option);
             if let Some(value) = subitem_value_option {
                 subitem_value = format!("{} {}", value, subitem_unit);
-                println!("subitem_value : {:?}", subitem_value);
+                info!("subitem_value : {:?}", subitem_value);
             } else {
-                println!("normal change: {:?}", subitem_value);
+                info!("normal change: {:?}", subitem_value);
                 let subitem_decimal = data_item_elem.get_child_text("decimal");
                 let is_sign = data_item_elem.get_child_text("sign");
 
@@ -654,7 +660,7 @@ impl FrameAnalisyic {
                 region,
                 dir,
             );
-            println!(
+            info!(
                 "ret: {:?}, data_segment: {:?}, data_item_elem: {:?}",
                 ret, data_segment, data_item_elem
             );
@@ -690,7 +696,7 @@ impl FrameAnalisyic {
         let subitem_type = data_item_elem
             .get_child_text("type")
             .unwrap_or_else(|| "BCD".to_string());
-        println!("subitem_type: {:?}", subitem_type);
+        info!("subitem_type: {:?}", subitem_type);
         let subitem_value = match subitem_type.to_uppercase().as_str() {
             "BCD" => FrameFun::bcd_to_decimal(data_segment, decimal, need_delete, sign),
             "BIN" => FrameFun::bin_to_decimal(data_segment, decimal, need_delete, sign, true),
@@ -698,11 +704,13 @@ impl FrameAnalisyic {
             "ASCII" => FrameFun::ascii_to_str(data_segment),
             "PORT" => FrameFun::prase_port(data_segment),
             "IP" => FrameFun::prase_ip_str(data_segment),
-            "BIN_BE" => FrameFun::prase_bin_be_deciml(data_segment, decimal, need_delete, sign, true),
+            "BIN_BE" => {
+                FrameFun::prase_bin_be_deciml(data_segment, decimal, need_delete, sign, true)
+            }
             "NORMAL" => FrameFun::get_data_str(&data_segment, need_delete, true, false),
             _ => return None, // 不支持的类型返回 None
         };
-        println!("subitem_value: {:?}", subitem_value);
+        info!("subitem_value: {:?}", subitem_value);
         Some(subitem_value)
     }
 
@@ -744,8 +752,7 @@ impl FrameAnalisyic {
                 FrameFun::hex_array_to_int(&data_segment[start_pos..end_pos], need_delete),
             );
             let value_elements = bit_elem.get_items("value");
-            let (value_name, element) =
-                Self::find_value_from_elements(&value_elements, &bit_value);
+            let (value_name, element) = Self::find_value_from_elements(&value_elements, &bit_value);
 
             let bit_id_attr = format!("bit{}", bit_id_attr);
             let name_str = if let Some(name_elem) = bit_name_elem {
@@ -897,7 +904,7 @@ impl FrameAnalisyic {
             let sub_neme = Self::get_item_name_str(sub_item_id, sub_item_name);
             let sub_item_length = splitlength_item.get_child_text("length");
             subitem_length = sub_data_segment.len();
-            println!(
+            info!(
                 "sub_data_segment:{:?} subitem_length:{} data_segment:{:?} sub_item_length{:?}",
                 sub_data_segment, subitem_length, data_segment, sub_item_length
             );
@@ -925,14 +932,14 @@ impl FrameAnalisyic {
                     }
                 }
             }
-            println!(
+            info!(
                 "sub_data_segment:{:?} subitem_length:{}",
                 sub_data_segment, subitem_length
             );
             splitlength_item_clone.update_value("length", subitem_length.to_string());
 
             if subitem_length > sub_data_segment.len() {
-                println!(
+                info!(
                     "subitem_length > sub_data_segment.len() {:?}",
                     sub_data_segment.len()
                 );
@@ -973,7 +980,7 @@ impl FrameAnalisyic {
                 result_str = format!("[{}]: {}", sub_neme, cur_result);
                 sub_item_result = sub_result;
                 cur_length = length;
-                println!(
+                info!(
                     "cur_result:{:?} sub_result:{:?} length:{:?}",
                     result_str, sub_item_result, length
                 );
@@ -1117,7 +1124,7 @@ impl FrameAnalisyic {
             }
             pos += subitem_length;
             sub_data_segment = &sub_data_segment[subitem_length..];
-            println!("cur_length:{:?}", cur_length);
+            info!("cur_length:{:?}", cur_length);
         }
         (result, pos)
     }
@@ -1147,7 +1154,7 @@ impl FrameAnalisyic {
             let mut result: Vec<Value> = Vec::new();
             if let Some(item_id) = item_id {
                 item_result_name = item_id.clone();
-                println!("prase_item_box item_id: {:?}", item_id);
+                info!("prase_item_box item_id: {:?}", item_id);
                 let item_element =
                     ProtocolConfigManager::get_config_xml(&item_id, protocol, region, dir);
                 let mut cur_length = 0;
@@ -1214,7 +1221,7 @@ impl FrameAnalisyic {
         for item_elem in all_items {
             if let Some(item_id) = item_elem.get_value() {
                 // 调用 `ConfigManager` 获取与 item_id 相关的 XML 元素
-                println!("caculate_item_box_length item_id: {:?}", item_id);
+                info!("caculate_item_box_length item_id: {:?}", item_id);
                 if let Some(item) =
                     ProtocolConfigManager::get_config_xml(&item_id, protocol, region, dir)
                 {
@@ -1264,7 +1271,7 @@ impl FrameAnalisyic {
         }
 
         let need_delete = false;
-        println!(
+        info!(
             "prase_type_item data_content: {:?} type: {:?}",
             data_content, sub_type
         );
@@ -1310,7 +1317,7 @@ impl FrameAnalisyic {
                         index,
                         region,
                     );
-                    println!("645 analysic {:?}", result_vec);
+                    info!("645 analysic {:?}", result_vec);
                     sub_item_result = Some(result_vec);
                 }
                 "FRAMECSG13" => {
@@ -1323,7 +1330,7 @@ impl FrameAnalisyic {
                     ) {
                         Ok(_) => {}
                         Err(e) => {
-                            println!("FrameCsg::analysic_csg_frame_by_afn error: {}", e);
+                            info!("FrameCsg::analysic_csg_frame_by_afn error: {}", e);
                         }
                     }
                     sub_item_result = Some(result_vec);
@@ -1343,7 +1350,7 @@ impl FrameAnalisyic {
                     let template_element = ProtocolConfigManager::get_template_element(
                         &sub_type, protocol, region, dir,
                     );
-                    println!(
+                    info!(
                         "template_element: {:?}, protocol: {:?}, region: {:?}, dir: {:?}",
                         template_element, protocol, region, dir
                     );
@@ -1473,7 +1480,7 @@ impl FrameAnalisyic {
                 let item_name = format!("第{}组数据标识", i + 1);
                 let item_id = FrameFun::get_data_str(sub_data, false, true, false);
                 let mut item_description: String = item_id.clone();
-                println!("prase_item_type item_id: {:?}", item_id);
+                info!("prase_item_type item_id: {:?}", item_id);
                 if let Some(item_element) =
                     ProtocolConfigManager::get_config_xml(&item_id, protocol, region, dir)
                 {
@@ -1618,7 +1625,7 @@ impl FrameAnalisyic {
             })
             .unwrap_or_else(|| format!("第{}组数据内容", i + 1));
 
-        println!(
+        info!(
             "prase_template_type item_singal: {:?} {:?} {:?}",
             data_segment, item_len, subitem_length
         );
@@ -1656,7 +1663,7 @@ impl FrameAnalisyic {
                 );
                 let item_id = FrameFun::get_data_str(sub_data, false, true, false);
                 let item_description: String = format!("[{}]: {}", item_name, item_id);
-                println!(
+                info!(
                     "prase_template_type item_id: {:?} {:?} {:?} {:?}",
                     item_id, item_value, item_description, item_singal
                 );
@@ -1669,20 +1676,25 @@ impl FrameAnalisyic {
                 if item_singal {
                     result_vec.extend(item_value);
                 } else {
-                    if !item_value.is_empty() && item_value.iter().any(|v| {
-                        if let Some(frame_domain) = v.get("frameDomain") {
-                            if frame_domain.is_string() {
-                                return true;
+                    if !item_value.is_empty()
+                        && item_value.iter().any(|v| {
+                            if let Some(frame_domain) = v.get("frameDomain") {
+                                if frame_domain.is_string() {
+                                    return true;
+                                }
                             }
-                        }
-                        false
-                    }) {
+                            false
+                        })
+                    {
                         // 将 frameDomain 修改为 item_name
                         let mut modified_value = item_value;
                         for v in modified_value.iter_mut() {
                             if let Some(frame_domain) = v.as_object_mut() {
                                 if frame_domain.contains_key("frameDomain") {
-                                    frame_domain.insert("frameDomain".to_string(), json!(item_name.clone()));
+                                    frame_domain.insert(
+                                        "frameDomain".to_string(),
+                                        json!(item_name.clone()),
+                                    );
                                 }
                                 if frame_domain.contains_key("description") {
                                     if let Some(description) = frame_domain.get("description") {
@@ -1691,7 +1703,10 @@ impl FrameAnalisyic {
                                             if let Some(attri_id) = attri_id.as_ref() {
                                                 let pattern = format!("{}_", attri_id);
                                                 let new_desc = desc_str.replace(&pattern, "");
-                                                frame_domain.insert("description".to_string(), json!(new_desc));
+                                                frame_domain.insert(
+                                                    "description".to_string(),
+                                                    json!(new_desc),
+                                                );
                                             }
                                         }
                                     }

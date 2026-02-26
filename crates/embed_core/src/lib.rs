@@ -5,11 +5,15 @@ use wasm_bindgen::prelude::*;
 
 pub mod basefunc;
 pub mod config;
-
+pub mod logger;
+use tracing::info;
 // Re-export commonly used types for easier access
 pub use basefunc::frame_fun::FrameFun;
 pub use basefunc::protocol::FrameAnalisyic;
 pub use config::xmlconfig::{QframeConfig, XmlElement};
+
+#[cfg(feature = "wasm")]
+use web_sys::console;
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
@@ -22,6 +26,8 @@ pub struct FrameAnalyzer {
 impl FrameAnalyzer {
     #[wasm_bindgen(constructor)]
     pub fn new(region: &str) -> FrameAnalyzer {
+        // Initialize logger for WASM
+        crate::logger::init_logger();
         FrameAnalyzer {
             region: region.to_string(),
         }

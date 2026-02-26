@@ -5,6 +5,7 @@ use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement};
 use regex::Regex;
 use serde_json::Value;
 pub struct FrameFun;
+use tracing::info;
 
 impl FrameFun {
     // PPP FCS16 查找表
@@ -181,7 +182,7 @@ impl FrameFun {
         let trans_array = bcd_array.to_vec().clone();
         let mut new_array = trans_array.clone();
 
-        println!(
+        info!(
             "bcd_array: {:?}, decimal_places: {:?}, need_delete: {:?}, sign: {:?}, judge_ff: {:?}",
             bcd_array, decimal_places, need_delete, sign, judge_ff
         );
@@ -212,7 +213,7 @@ impl FrameFun {
             decimal_places
         );
 
-        println!("bcd_array {:?}", bcd_array);
+        info!("bcd_array {:?}", bcd_array);
         // Add decimal point to the string
         let decimal_string = if decimal_places > 0 {
             format!(
@@ -312,7 +313,7 @@ impl FrameFun {
             decimal_places
         );
 
-        println!("bcd_array {:?}", bcd_array);
+        info!("bcd_array {:?}", bcd_array);
         // 添加前导零
         let decimal_string = if decimal_places != 0 {
             format!(
@@ -494,7 +495,7 @@ impl FrameFun {
     }
 
     pub fn extract_bits(start_bit: usize, end_bit: usize, value: u32) -> String {
-        println!(
+        info!(
             "start_bit: {:?}, end_bit: {:?}, value: {:?}",
             start_bit, end_bit, value
         );

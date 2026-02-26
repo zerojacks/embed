@@ -3,7 +3,7 @@ use crate::basefunc::frame_fun::FrameFun;
 use crate::basefunc::protocol::{FrameAnalisyic, ProtocolInfo};
 use crate::config::xmlconfig::ProtocolConfigManager;
 use serde_json::Value;
-
+use tracing::info;
 const FRAME_START: u8 = 0x68;
 const FRAME_END: u8 = 0x16;
 
