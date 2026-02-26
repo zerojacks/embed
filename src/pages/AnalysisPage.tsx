@@ -9,9 +9,9 @@ import type { Column } from "../components/treeview"
 import type { TreeItemType } from '../components/TreeItem'
 
 const initialColumns: Column[] = [
-  { name: '帧域', width: 30, minWidth: 100 },
-  { name: '数据', width: 30, minWidth: 50 },
-  { name: '说明', width: 40, minWidth: 50 },
+  { name: '帧域', width: 200, minWidth: 120 },
+  { name: '数据', width: 150, minWidth: 80 },
+  { name: '说明', width: 300, minWidth: 100 },
 ]
 
 export default function AnalysisPage() {

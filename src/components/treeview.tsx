@@ -51,6 +51,54 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
   const [progress, setProgress] = useState({ type: '', position: 'end', visible: false });
   const [treedata, setTreeData] = useState<TreeItemType[]>(data);
 
+  // 列宽调节相关状态
+  const [columns, setColumns] = useState<Column[]>(tableheads);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizingColumn, setResizingColumn] = useState<number | null>(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
+
+  // 初始化时扩展最后一列以填满容器
+  useEffect(() => {
+    if (containerRef.current && !isResizing) {
+      const containerWidth = containerRef.current.clientWidth;
+
+      if (containerWidth > 0 && tableheads.length > 0) {
+        // 使用百分比分配列宽
+        const adjustedColumns = tableheads.map((col, index) => {
+          let widthPercentage: number;
+
+          // 根据列的内容特性分配百分比
+          switch (index) {
+            case 0: // 帧域列
+              widthPercentage = 0.3; // 30%
+              break;
+            case 1: // 数据列
+              widthPercentage = 0.25; // 25%
+              break;
+            case 2: // 说明列
+              widthPercentage = 0.45; // 45%
+              break;
+            default:
+              widthPercentage = 1 / tableheads.length; // 平均分配
+          }
+
+          const calculatedWidth = Math.floor(containerWidth * widthPercentage);
+          const minWidth = getColumnMinWidth(col);
+
+          return {
+            ...col,
+            width: Math.max(calculatedWidth, minWidth)
+          };
+        });
+
+        setColumns(adjustedColumns);
+      } else {
+        setColumns(tableheads);
+      }
+    }
+  }, [tableheads, containerRef.current?.clientWidth]);
+
   const is_expand = selectedRowId ? expandedRows.has(selectedRowId) : false;
 
   // 默认导出配置
@@ -97,13 +145,13 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
           filter: (node: Node) => {
             if (node instanceof Element) {
               const element = node as HTMLElement;
-              
+
               // 排除可能导致边框的元素
               const problematicClasses = ['border', 'shadow', 'outline'];
-              const hasProblematicClass = problematicClasses.some(cls => 
+              const hasProblematicClass = problematicClasses.some(cls =>
                 element.className && element.className.includes(cls)
               );
-              
+
               // 如果元素有问题的类，但不是表格相关元素，则排除
               if (hasProblematicClass && !['TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD'].includes(element.tagName)) {
                 return false;
@@ -165,7 +213,7 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
         console.error('Error exporting image:', error);
         setProgress(prevProgress => ({ ...prevProgress, visible: false }));
         toast.error("图片导出失败");
-        
+
         // 确保清理临时样式表
         const tempStyle = document.getElementById('temp-export-style');
         if (tempStyle) {
@@ -255,6 +303,94 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
   const closeContextMenu = () => {
     setContextMenu({ visible: false, x: 0, y: 0 });
   };
+
+  // 计算文本宽度的函数
+  const calculateTextWidth = (text: string, fontSize: string = '14px', fontFamily: string = 'ui-sans-serif, system-ui, sans-serif'): number => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.font = `${fontSize} ${fontFamily}`;
+      return Math.ceil(context.measureText(text).width);
+    }
+    // 如果无法测量，使用字符数 * 平均字符宽度作为估算
+    return text.length * 8;
+  };
+
+  // 获取列的智能最小宽度
+  const getColumnMinWidth = (column: Column): number => {
+    const textWidth = calculateTextWidth(column.name);
+    const padding = 32; // 左右内边距
+    const resizeHandle = 6; // 调节手柄宽度
+    const calculatedMinWidth = textWidth + padding + resizeHandle;
+
+    // 使用配置的最小宽度和计算出的文本宽度中的较大值
+    return Math.max(column.minWidth || 80, calculatedMinWidth);
+  };
+
+  // 列宽调节相关函数
+  const handleMouseDown = (e: React.MouseEvent, columnIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizingColumn(columnIndex);
+    setStartX(e.clientX);
+    setStartWidth(columns[columnIndex].width);
+  };
+
+
+
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
+    if (!isResizing || resizingColumn === null) return;
+
+    const deltaX = e.clientX - startX;
+    const newWidth = startWidth + deltaX;
+
+    setColumns(prevColumns => {
+      const newColumns = [...prevColumns];
+      const currentColumn = newColumns[resizingColumn];
+
+      // 使用智能最小宽度计算
+      const minWidth = getColumnMinWidth(currentColumn);
+
+      // 计算调整后的列宽
+      const adjustedWidth = Math.max(minWidth, newWidth);
+
+      // 更新当前调整的列
+      newColumns[resizingColumn] = {
+        ...currentColumn,
+        width: adjustedWidth
+      };
+
+      return newColumns;
+    });
+  }, [isResizing, resizingColumn, startX, startWidth]);
+
+  const handleMouseUp = React.useCallback(() => {
+    setIsResizing(false);
+    setResizingColumn(null);
+  }, []);
+
+  // 添加全局鼠标事件监听
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  // 当 tableheads 改变时更新 columns
+  useEffect(() => {
+    setColumns(tableheads);
+  }, [tableheads]);
 
 
   useEffect(() => {
@@ -360,11 +496,11 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
   };
 
   return (
-    <div className="w-full h-full overflow-auto treetableview rounded-md shadow-sm bg-base-100" ref={containerRef} onContextMenu={handleContextMenu} style={{ border: 'none' }}>
+    <div className="w-full h-full overflow-x-auto overflow-y-auto treetableview rounded-md shadow-sm bg-base-100" ref={containerRef} onContextMenu={handleContextMenu} style={{ border: 'none' }}>
       {progress.visible && <Progress type={progress.type} xlevel={progress.position} />}
-      <table className="w-full table-fixed bg-base-100" ref={tableRef} style={{ borderCollapse: 'separate', borderSpacing: '0', border: 'none' }}>
+      <table className="bg-base-100" ref={tableRef} style={{ borderCollapse: 'separate', borderSpacing: '0', border: 'none', tableLayout: 'fixed', width: '100%' }}>
         <colgroup>
-          {tableheads.map((column, index) => (
+          {columns.map((column, index) => (
             <col key={index} style={{ width: `${column.width}px` }} />
           ))}
         </colgroup>
@@ -377,7 +513,7 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
             borderRight: 'none',
             outline: 'none'
           }}>
-            {tableheads.map((column, index) => (
+            {columns.map((column, index) => (
               <th
                 key={index}
                 style={{
@@ -390,9 +526,48 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
                   borderRight: 'none',
                   outline: 'none'
                 }}
-                className="font-medium text-center border-none"
+                className="font-medium text-center border-none shrink-0 overflow-hidden text-ellipsis whitespace-nowrap px-2"
               >
                 {column.name}
+                {/* 列宽调节手柄 */}
+                {index < columns.length - 1 && (
+                  <div
+                    className="absolute top-0 h-full cursor-col-resize group"
+                    style={{
+                      right: '-4px',
+                      width: '8px',
+                      zIndex: 50,
+                    }}
+                    onMouseDown={(e) => handleMouseDown(e, index)}
+                    title={`拖拽调节第${index + 1}列宽度`}
+                  >
+                    {/* 分割线 */}
+                    <div
+                      className={`w-0.5 h-full mx-auto transition-all duration-200 ${isResizing && resizingColumn === index
+                          ? 'bg-primary shadow-lg shadow-primary/50 w-1'
+                          : 'bg-base-content/30 group-hover:bg-primary group-hover:w-1'
+                        }`}
+                    />
+                    {/* 拖拽区域背景 */}
+                    <div
+                      className={`absolute inset-0 transition-all duration-200 rounded-sm ${isResizing && resizingColumn === index
+                          ? 'bg-primary/25 border border-primary/30'
+                          : 'bg-transparent group-hover:bg-primary/15'
+                        }`}
+                    />
+                    {/* 拖拽指示器 */}
+                    <div
+                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 ${isResizing && resizingColumn === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        }`}
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <div className="w-0.5 h-1 bg-primary rounded-full"></div>
+                        <div className="w-0.5 h-1 bg-primary rounded-full"></div>
+                        <div className="w-0.5 h-1 bg-primary rounded-full"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </th>
             ))}
           </tr>
@@ -410,6 +585,7 @@ export const TreeTable: React.FC<TreeTableViewProps> = ({ data, tableheads, onRo
               setSelectedCell={setSelectedCell}
               rowIndex={index}
               expandedRows={expandedRows}
+              columns={columns} // 传递 columns 参数
             />
           ))}
         </tbody>

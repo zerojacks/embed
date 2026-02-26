@@ -24,6 +24,7 @@ interface TreeItemProps {
   setSelectedCell: (cell: { row: number | null; column: number | null }) => void; // 设置选中单元格的状态
   rowIndex: number; // 当前行的索引
   expandedRows: Set<string>; // 传递 expandedRows
+  columns: { name: string; width: number; minWidth: number }[]; // 保留用于传递给子组件
 }
 
 const ItemTreeView: React.FC<TreeItemProps> = ({
@@ -35,7 +36,8 @@ const ItemTreeView: React.FC<TreeItemProps> = ({
   selectedCell,
   setSelectedCell,
   rowIndex,
-  expandedRows // 传递 expandedRows
+  expandedRows, // 传递 expandedRows
+  columns // 添加 columns 参数
 }) => {
   const hasChildren = data.children && data.children.length > 0;
 
@@ -73,7 +75,7 @@ const ItemTreeView: React.FC<TreeItemProps> = ({
         <td
           style={{
             paddingLeft: `${level * 20}px`,
-            backgroundColor: selectedCell.row === rowIndex && selectedCell.column === 0 ? 'red' : '',
+            backgroundColor: selectedCell.row === rowIndex && selectedCell.column === 0 ? 'red' : 'transparent',
             border: 'none',
           }}
           onClick={() => handleCellClick(0)}
@@ -134,6 +136,7 @@ const ItemTreeView: React.FC<TreeItemProps> = ({
               setSelectedCell={setSelectedCell}
               rowIndex={rowIndex * 100 + index}
               expandedRows={expandedRows} // 传递 expandedRows
+              columns={columns} // 传递 columns 参数
             />
           ))}
         </>
