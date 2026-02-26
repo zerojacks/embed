@@ -1,13 +1,12 @@
 import { Group, Panel, Separator } from "react-resizable-panels"
 import { useFrameTreeStore } from '../stores/useFrameAnalysicStore'
 import { useSplitSizeStore } from '../stores/useSplitSizeSlice'
-import { useWasmAnalyzer } from '../hooks/useWasmAnalyzer'
+import { useWasm } from '../contexts/WasmContext'
 import { useEffect, useRef, useState } from "react"
 import { toast } from 'react-hot-toast'
 import { TreeTable } from "../components/treeview"
 import type { Column } from "../components/treeview"
 import type { TreeItemType } from '../components/TreeItem'
-import type { ProtocolType } from '../types'
 
 const initialColumns: Column[] = [
   { name: '帧域', width: 30, minWidth: 100 },
@@ -34,13 +33,12 @@ export default function AnalysisPage() {
   const { splitSize, setSplitSize } = useSplitSizeStore()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [selectedRegion] = useState('南网')
-  const [selectedProtocol] = useState<ProtocolType | 'auto'>('auto')
 
   const {
     analyzer,
     isLoading: wasmLoading,
     analyzeFrame
-  } = useWasmAnalyzer(selectedRegion)
+  } = useWasm()
 
   const getRegions = () => ['南网', '国网', '广东', '广西', '云南', '贵州', '海南']
 
@@ -143,7 +141,7 @@ export default function AnalysisPage() {
 
         const analysisResult = await analyzeFrame(
           formattedValue.replace(/\s+/g, ''),
-          selectedProtocol
+          region
         )
 
         if (analysisResult.success) {

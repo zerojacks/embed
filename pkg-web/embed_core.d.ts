@@ -20,36 +20,32 @@ export class FrameAnalyzer {
      * Convert hex string to byte array
      */
     hex_to_bytes(hex_string: string): Uint8Array;
-    constructor(region: string);
+    constructor();
     /**
      * Main frame processing function - auto-detects protocol and analyzes frame
      */
-    process_frame(frame_data: Uint8Array): string;
+    process_frame(frame_data: Uint8Array, region: string): string;
+    update_protocol_config(protocol: string, content: string): void;
 }
-
-export function wasm_get_config_value(section: string, key: string): any;
-
-export function wasm_set_config_value(section: string, key: string, value: string): void;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly wasm_set_config_value: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
-    readonly wasm_get_config_value: (a: number, b: number, c: number, d: number) => any;
     readonly __wbg_frameanalyzer_free: (a: number, b: number) => void;
-    readonly frameanalyzer_new: (a: number, b: number) => number;
-    readonly frameanalyzer_process_frame: (a: number, b: number, c: number) => [number, number];
+    readonly frameanalyzer_new: () => number;
+    readonly frameanalyzer_process_frame: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly frameanalyzer_hex_to_bytes: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_bytes_to_hex: (a: number, b: number, c: number) => [number, number];
     readonly frameanalyzer_get_frame_array_from_str: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_get_available_protocols: (a: number) => [number, number];
-    readonly __wbindgen_malloc: (a: number, b: number) => number;
-    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+    readonly frameanalyzer_update_protocol_config: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
-    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_malloc: (a: number, b: number) => number;
+    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __externref_table_dealloc: (a: number) => void;
     readonly __wbindgen_start: () => void;
 }

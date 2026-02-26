@@ -13,6 +13,7 @@ use quick_xml::Reader;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
+#[cfg(feature = "desktop")]
 use crate::config::appconfig::load_config_value;
 
 // 定义树节点结构
@@ -1057,6 +1058,53 @@ impl ProtocolConfigManager {
                 std::io::ErrorKind::NotFound,
                 "Element not found",
             ))
+        }
+    }
+
+    pub fn update_protocol_xmlconfig(protocol: &str, content: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let find_protocol = protocol.to_uppercase();
+        match find_protocol.as_str() {
+            protocol if protocol.contains("CSG13") => {
+                GLOBAL_CSG13
+                    .as_ref()
+                    .map_err(|e| format!("CSG13 global config initialization failed: {}", e))?
+                    .load_from_str(content)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("DLT/645") => {
+                GLOBAL_645
+                    .as_ref()
+                    .map_err(|e| format!("DLT/645 global config initialization failed: {}", e))?
+                    .load_from_str(content)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("CSG16") => {
+                GLOBAL_CSG16
+                    .as_ref()
+                    .map_err(|e| format!("CSG16 global config initialization failed: {}", e))?
+                    .load_from_str(content)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("MODULE") => {
+                GLOBAL_Moudle
+                    .as_ref()
+                    .map_err(|e| format!("MODULE global config initialization failed: {}", e))?
+                    .load_from_str(content)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("MS") => {
+                GLOBAL_MS
+                    .as_ref()
+                    .map_err(|e| format!("MS global config initialization failed: {}", e))?
+                    .load_from_str(content)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            _ => Err(format!("Unsupported protocol: {}", protocol).into()),
         }
     }
 }

@@ -20,11 +20,20 @@ extern "C" {
 
 #[cfg(feature = "wasm")]
 pub fn init_logger() {
-    // 设置 panic hook
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+    use std::sync::Once;
+    static INIT: Once = Once::new();
 
-    // 初始化 tracing-wasm，这样 info!, warn!, error! 等宏就能直接输出到浏览器控制台
-    tracing_wasm::set_as_global_default();
+    INIT.call_once(|| {
+        // 设置 panic hook
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+        // 初始化 tracing-wasm，这样 info!, warn!, error! 等宏就能直接输出到浏览器控制台
+        // 使用 try_set_as_global_default 来避免重复初始化的错误
+        if let Err(_) = tracing_wasm::try_set_as_global_default() {
+            // 如果已经初始化过了，就忽略错误
+            console::log_1(&"Logger already initialized".into());
+        }
+    });
 }
 
 #[cfg(not(feature = "wasm"))]

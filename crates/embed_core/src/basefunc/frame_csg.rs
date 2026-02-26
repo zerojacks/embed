@@ -3533,7 +3533,7 @@ impl FrameCsg {
                         let err = CustomError::new(1, err_str);
                         return Err(err);
                     } else {
-                        let sub_length = 0;
+                        sub_length = 0;
                     }
 
                     let dis_data_identifier = format!("数据标识编码：[{}]", data_item);
@@ -3546,6 +3546,24 @@ impl FrameCsg {
                         None,
                         None,
                     );
+                    pos += sub_length + 4;
+                    num += 1;
+
+                    if length - pos == 16 {
+                        pw = Self::guest_is_exit_pw(
+                            length,
+                            pw_data,
+                            None,
+                            None,
+                            false,
+                            protocol,
+                            region,
+                            Some(dir),
+                        );
+                        if pw {
+                            length -= 16;
+                        }
+                    }
                 }
                 Ok(())
             })();

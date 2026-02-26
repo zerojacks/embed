@@ -10,7 +10,7 @@ use tracing::info;
 // Re-export commonly used types for easier access
 pub use basefunc::frame_fun::FrameFun;
 pub use basefunc::protocol::FrameAnalisyic;
-pub use config::xmlconfig::{QframeConfig, XmlElement};
+pub use config::xmlconfig::{ProtocolConfigManager, QframeConfig, XmlElement};
 
 #[cfg(feature = "wasm")]
 use web_sys::console;
@@ -18,29 +18,29 @@ use web_sys::console;
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct FrameAnalyzer {
-    region: String,
+    // Remove region field since it's passed per call
 }
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl FrameAnalyzer {
     #[wasm_bindgen(constructor)]
-    pub fn new(region: &str) -> FrameAnalyzer {
+    pub fn new() -> FrameAnalyzer {
         // Initialize logger for WASM
         crate::logger::init_logger();
         FrameAnalyzer {
-            region: region.to_string(),
+            // No region field to initialize
         }
     }
 
     /// Main frame processing function - auto-detects protocol and analyzes frame
     #[wasm_bindgen]
-    pub fn process_frame(&self, frame_data: &[u8]) -> String {
-        let (protocol, parsed_data) = FrameAnalisyic::process_frame(frame_data, &self.region);
+    pub fn process_frame(&self, frame_data: &[u8], region: &str) -> String {
+        let (protocol, parsed_data) = FrameAnalisyic::process_frame(frame_data, region);
 
         let response = serde_json::json!({
             "protocol": protocol,
-            "region": self.region,
+            "region": region,
             "data": parsed_data
         });
 
@@ -80,6 +80,12 @@ impl FrameAnalyzer {
     pub fn get_available_protocols(&self) -> String {
         let protocols = vec!["CSG13", "CSG16", "DLT/645-2007", "moudle", "MS", "His"];
         serde_json::to_string(&protocols).unwrap_or_else(|_| "[]".to_string())
+    }
+
+    #[wasm_bindgen]
+    pub fn update_protocol_config(&self, protocol: String, content: String) -> Result<(), JsValue> {
+        ProtocolConfigManager::update_protocol_xmlconfig(&protocol, &content)
+            .map_err(|e| JsValue::from_str(&format!("Failed to update config: {}", e)))
     }
 }
 
