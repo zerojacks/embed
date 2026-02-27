@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import AnalysisPage from './pages/AnalysisPage'
 import ToolsPage from './pages/ToolsPage'
 import ConfigPage from './pages/ConfigPage'
+import FeedbackPage from './pages/FeedbackPage'
 import ConverterPage from './pages/tools/ConverterPage'
 import ChecksumPage from './pages/tools/ChecksumPage'
 
@@ -20,6 +21,7 @@ function App() {
               <Route path="tools/converter" element={<ConverterPage />} />
               <Route path="tools/checksum" element={<ChecksumPage />} />
               <Route path="config" element={<ConfigPage />} />
+              <Route path="feedback" element={<FeedbackPage />} />
             </Route>
           </Routes>
           <Toaster

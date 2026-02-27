@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { MessageSquare } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
 export default function Layout() {
@@ -58,6 +59,14 @@ export default function Layout() {
         </div>
 
         <div className="navbar-end gap-2">
+          <Link 
+            to="/feedback" 
+            className="btn btn-ghost btn-sm gap-2"
+            title="问题反馈"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">反馈</span>
+          </Link>
           <ThemeToggle />
         </div>
       </div>

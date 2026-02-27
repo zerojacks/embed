@@ -16,6 +16,7 @@
     "fresh-install": "npm run clean && npm install"
   },
   "dependencies": {
+    "@formspree/react": "^3.0.0",
     "@reduxjs/toolkit": "^2.11.2",
     "@tailwindcss/vite": "^4.2.1",
     "@types/react-router-dom": "^5.3.3",
