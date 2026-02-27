@@ -25,7 +25,6 @@ pub enum ProtocolInfo {
     ProtocolDLT64507,
     ProtocolMoudle,
     ProtocolMS,
-    ProtocolHis,
 }
 
 impl ProtocolInfo {
@@ -36,7 +35,6 @@ impl ProtocolInfo {
             ProtocolInfo::ProtocolDLT64507 => "DLT/645-2007",
             ProtocolInfo::ProtocolMoudle => "moudle",
             ProtocolInfo::ProtocolMS => "MS",
-            ProtocolInfo::ProtocolHis => "His",
         }
     }
 }

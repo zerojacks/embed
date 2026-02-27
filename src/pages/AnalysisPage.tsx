@@ -40,7 +40,7 @@ export default function AnalysisPage() {
     analyzeFrame
   } = useWasm()
 
-  const getRegions = () => ['南网', '国网', '广东', '广西', '云南', '贵州', '海南']
+  const getRegions = () => ["南网", "云南", "广东", "深圳", "广西", "贵州", "海南"]
 
   const convertToTreeData = (data: any[]): TreeItemType[] => {
     if (!Array.isArray(data)) return []

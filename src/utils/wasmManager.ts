@@ -65,7 +65,7 @@ class WasmManager {
       return
     }
 
-    const availableProtocols = ['CSG13', 'CSG16', 'DLT/645-2007', 'MOUDLE', 'TASK_MS', 'His']
+    const availableProtocols = ['CSG13', 'CSG16', 'DLT/645-2007', 'MOUDLE', 'TASK_MS']
 
     for (const protocol of availableProtocols) {
       const storageKey = `protocol_config_${protocol}`

@@ -32,7 +32,7 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
     const [analyzer, setAnalyzer] = useState<FrameAnalyzer | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [availableProtocols] = useState<string[]>(['CSG13', 'CSG16', 'DLT/645-2007', 'moudle', 'MS', 'His'])
+    const [availableProtocols] = useState<string[]>(['CSG13', 'CSG16', 'DLT/645-2007', 'moudle', 'MS'])
 
     useEffect(() => {
         const initWasm = async () => {

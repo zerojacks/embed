@@ -77,7 +77,7 @@ impl FrameAnalyzer {
     /// Get available protocols
     #[wasm_bindgen]
     pub fn get_available_protocols(&self) -> String {
-        let protocols = vec!["CSG13", "CSG16", "DLT/645-2007", "moudle", "MS", "His"];
+        let protocols = vec!["CSG13", "CSG16", "DLT/645-2007", "moudle", "MS"];
         serde_json::to_string(&protocols).unwrap_or_else(|_| "[]".to_string())
     }
 

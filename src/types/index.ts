@@ -1,5 +1,5 @@
 // Protocol types based on the actual WASM implementation
-export type ProtocolType = 'CSG13' | 'CSG16' | 'DLT/645-2007' | 'moudle' | 'MS' | 'His' | 'Unknown'
+export type ProtocolType = 'CSG13' | 'CSG16' | 'DLT/645-2007' | 'moudle' | 'MS' | 'Unknown'
 
 export interface AnalysisResult {
   protocol: string
