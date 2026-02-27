@@ -1107,4 +1107,56 @@ impl ProtocolConfigManager {
             _ => Err(format!("Unsupported protocol: {}", protocol).into()),
         }
     }
+
+    pub fn reset_protocol_xmlconfig(protocol: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let find_protocol = protocol.to_uppercase();
+        match find_protocol.as_str() {
+            protocol if protocol.contains("CSG13") => {
+                let xml = include_str!("../../../../public/config/CSG13.xml");
+                GLOBAL_CSG13
+                    .as_ref()
+                    .map_err(|e| format!("CSG13 global config initialization failed: {}", e))?
+                    .load_from_str(xml)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("DLT/645") => {
+                let xml = include_str!("../../../../public/config/DLT645.xml");
+                GLOBAL_645
+                    .as_ref()
+                    .map_err(|e| format!("DLT/645 global config initialization failed: {}", e))?
+                    .load_from_str(xml)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("CSG16") => {
+                let xml = include_str!("../../../../public/config/CSG16.xml");
+                GLOBAL_CSG16
+                    .as_ref()
+                    .map_err(|e| format!("CSG16 global config initialization failed: {}", e))?
+                    .load_from_str(xml)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("MODULE") => {
+                let xml = include_str!("../../../../public/config/MOUDLE.xml");
+                GLOBAL_Moudle
+                    .as_ref()
+                    .map_err(|e| format!("MODULE global config initialization failed: {}", e))?
+                    .load_from_str(xml)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            protocol if protocol.contains("MS") => {
+                let xml = include_str!("../../../../public/config/TASK_MS.xml");
+                GLOBAL_MS
+                    .as_ref()
+                    .map_err(|e| format!("MS global config initialization failed: {}", e))?
+                    .load_from_str(xml)
+                    .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+                Ok(())
+            }
+            _ => Err(format!("Unsupported protocol: {}", protocol).into()),
+        }
+    }
 }

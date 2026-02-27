@@ -15,6 +15,7 @@ interface WasmContextType {
     convertBytesToHex: (data: Uint8Array) => string
     getAvailableProtocols: () => string[]
     updateProtocolConfig: (protocol: ProtocolType, content: string) => Promise<void>
+    resetProtocolConfig: (protocol: ProtocolType) => Promise<void>
 }
 
 const WasmContext = createContext<WasmContextType | null>(null)
@@ -132,6 +133,20 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
+    const resetProtocolConfig = async (protocol: ProtocolType): Promise<void> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            analyzer.reset_protocol_config(protocol)
+            toast.success(`${protocol} 协议配置已重置`)
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '配置重置失败'
+            toast.error(errorMessage)
+            throw error
+        }
+    }
+
     const contextValue: WasmContextType = {
         analyzer,
         isLoading,
@@ -141,7 +156,8 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         convertHexToBytes,
         convertBytesToHex,
         getAvailableProtocols,
-        updateProtocolConfig
+        updateProtocolConfig,
+        resetProtocolConfig
     }
 
     return (

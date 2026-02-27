@@ -86,6 +86,12 @@ impl FrameAnalyzer {
         ProtocolConfigManager::update_protocol_xmlconfig(&protocol, &content)
             .map_err(|e| JsValue::from_str(&format!("Failed to update config: {}", e)))
     }
+
+    #[wasm_bindgen]
+    pub fn reset_protocol_config(&self, protocol: String) -> Result<(), JsValue> {
+        ProtocolConfigManager::reset_protocol_xmlconfig(&protocol)
+            .map_err(|e| JsValue::from_str(&format!("Failed to reset config: {}", e)))
+    }
 }
 
 // For Tauri/desktop usage - direct function exports

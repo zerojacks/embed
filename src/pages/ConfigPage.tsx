@@ -21,10 +21,12 @@ interface ProtocolConfig {
 }
 
 const ConfigPage: React.FC = () => {
-    const { isLoading: wasmLoading, updateProtocolConfig, getAvailableProtocols } = useWasm()
+    const { isLoading: wasmLoading, updateProtocolConfig, getAvailableProtocols, resetProtocolConfig } = useWasm()
     const [protocolConfigs, setProtocolConfigs] = useState<ProtocolConfig[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [initialized, setInitialized] = useState(false)
+    const [showResetModal, setShowResetModal] = useState(false)
+    const [resetProtocolType, setResetProtocolType] = useState<string>('')
     const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
     // 处理文件选择
@@ -206,35 +208,41 @@ const ConfigPage: React.FC = () => {
         return names[type] || type
     }
 
-    // 重置协议配置到默认状态
-    const handleResetConfig = async (protocolType: string) => {
-        if (!confirm(`确定要重置 ${getProtocolName(protocolType)} 到默认配置吗？`)) {
-            return
-        }
+    // 显示重置确认对话框
+    const showResetConfirmation = (protocolType: string) => {
+        setResetProtocolType(protocolType)
+        setShowResetModal(true)
+    }
+
+    // 确认重置协议配置
+    const confirmResetConfig = async () => {
+        setShowResetModal(false)
 
         try {
             setIsLoading(true)
 
+            await resetProtocolConfig(resetProtocolType as ProtocolType)
             // 创建默认配置
-            const defaultConfig = createDefaultConfig(protocolType)
+            const defaultConfig = createDefaultConfig(resetProtocolType)
 
             // 更新本地状态
             setProtocolConfigs(prev =>
                 prev.map(config =>
-                    config.type === protocolType ? defaultConfig : config
+                    config.type === resetProtocolType ? defaultConfig : config
                 )
             )
 
             // 从 localStorage 中删除自定义配置
-            const storageKey = `protocol_config_${protocolType}`
+            const storageKey = `protocol_config_${resetProtocolType}`
             localStorage.removeItem(storageKey)
 
-            toast.success(`${getProtocolName(protocolType)} 已重置为默认配置`)
+            toast.success(`${getProtocolName(resetProtocolType)} 已重置为默认配置`)
         } catch (error) {
             console.error('Failed to reset config:', error)
             toast.error('重置配置失败')
         } finally {
             setIsLoading(false)
+            setResetProtocolType('')
         }
     }
 
@@ -342,7 +350,7 @@ const ConfigPage: React.FC = () => {
                                                 </button>
                                                 <button
                                                     className="btn btn-ghost btn-sm text-warning"
-                                                    onClick={() => handleResetConfig(config.type)}
+                                                    onClick={() => showResetConfirmation(config.type)}
                                                     title="重置为默认配置"
                                                     disabled={config.isDefault}
                                                 >
@@ -385,6 +393,35 @@ const ConfigPage: React.FC = () => {
                     <div className="bg-base-100 p-6 rounded-lg shadow-xl flex items-center space-x-3">
                         <div className="loading loading-spinner loading-md"></div>
                         <span>正在处理配置...</span>
+                    </div>
+                </div>
+            )}
+
+            {/* 重置确认对话框 */}
+            {showResetModal && (
+                <div className="modal modal-open">
+                    <div className="modal-box">
+                        <h3 className="font-bold text-lg">确认重置配置</h3>
+                        <p className="py-4">
+                            确定要重置 <span className="font-semibold text-warning">{getProtocolName(resetProtocolType)}</span> 到默认配置吗？
+                        </p>
+                        <p className="text-sm text-base-content/60 mb-4">
+                            此操作将删除当前的自定义配置，恢复为系统默认配置，且无法撤销。
+                        </p>
+                        <div className="modal-action">
+                            <button
+                                className="btn btn-ghost"
+                                onClick={() => setShowResetModal(false)}
+                            >
+                                取消
+                            </button>
+                            <button
+                                className="btn btn-warning"
+                                onClick={confirmResetConfig}
+                            >
+                                确认重置
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -25,6 +25,7 @@ export class FrameAnalyzer {
      * Main frame processing function - auto-detects protocol and analyzes frame
      */
     process_frame(frame_data: Uint8Array, region: string): string;
+    reset_protocol_config(protocol: string): void;
     update_protocol_config(protocol: string, content: string): void;
 }
 
@@ -40,6 +41,7 @@ export interface InitOutput {
     readonly frameanalyzer_get_frame_array_from_str: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_get_available_protocols: (a: number) => [number, number];
     readonly frameanalyzer_update_protocol_config: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly frameanalyzer_reset_protocol_config: (a: number, b: number, c: number) => [number, number];
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;

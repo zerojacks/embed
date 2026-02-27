@@ -108,6 +108,17 @@ export class FrameAnalyzer {
     }
     /**
      * @param {string} protocol
+     */
+    reset_protocol_config(protocol) {
+        const ptr0 = passStringToWasm0(protocol, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.frameanalyzer_reset_protocol_config(this.__wbg_ptr, ptr0, len0);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * @param {string} protocol
      * @param {string} content
      */
     update_protocol_config(protocol, content) {
