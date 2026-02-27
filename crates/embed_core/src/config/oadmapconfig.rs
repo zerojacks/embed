@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fs::File;
 #[cfg(feature = "desktop")]
 use std::io::Read;
+#[cfg(feature = "desktop")]
 use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -69,7 +70,7 @@ impl CompleteConfig {
         let main_config: MainConfig = serde_yaml::from_str(main_yaml)?;
         let mut sub_configs = HashMap::new();
         for oad_item in &main_config.oad_list {
-            let file_path = oad_item.file_path.trim_start_matches("!inc ");
+            let _file_path = oad_item.file_path.trim_start_matches("!inc ");
             // use name to lookup
             if let Some(sub_yaml) = sub_yaml_map.get(&oad_item.name) {
                 let sub_config: SubConfig = serde_yaml::from_str(sub_yaml)?;
@@ -176,7 +177,7 @@ impl TaskOadConfigManager {
                 eprintln!("找不到对应的配置列表: {}", master_oad);
                 return None;
             }
-            for (list_name, items) in &config.unwrap().lists {
+            for (_list_name, items) in &config.unwrap().lists {
                 for item in items {
                     if item.v_oad.to_lowercase() == v_oad.to_lowercase() {
                         return Some(item.clone());

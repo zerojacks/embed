@@ -1,16 +1,16 @@
+#[cfg(feature = "desktop")]
 use crate::config::constants;
+#[cfg(feature = "desktop")]
 use lazy_static::lazy_static;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 #[cfg(feature = "desktop")]
 use std::fs;
+#[cfg(feature = "desktop")]
 use std::path::{Path, PathBuf};
+#[cfg(feature = "desktop")]
 use std::sync::Mutex;
-
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-#[cfg(feature = "wasm")]
-use web_sys;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -80,14 +80,14 @@ impl Config {
     }
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(all(feature = "desktop", target_os = "windows"))]
 fn get_config_dir(app_name: &str) -> PathBuf {
     let base_dir = std::env::var("APPDATA")
         .unwrap_or_else(|_| "C:\\Users\\Default\\AppData\\Roaming".to_string());
     PathBuf::from(base_dir).join(app_name)
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(feature = "desktop", target_os = "macos"))]
 fn get_config_dir(app_name: &str) -> PathBuf {
     let base_dir = dirs_next::home_dir()
         .unwrap()
@@ -96,7 +96,7 @@ fn get_config_dir(app_name: &str) -> PathBuf {
     base_dir.join(app_name)
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(feature = "desktop", target_os = "linux"))]
 fn get_config_dir(app_name: &str) -> PathBuf {
     let base_dir = std::env::var("XDG_CONFIG_HOME")
         .unwrap_or_else(|_| format!("{}/.config", dirs_next::home_dir().unwrap().display()));

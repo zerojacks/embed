@@ -128,9 +128,9 @@ impl XmlTree {
         protocol: &str,
         region: &str,
         dir: Option<u8>,
-        protocol_nodes: Option<&HashSet<usize>>,
-        region_nodes: Option<&HashSet<usize>>,
-        south_grid_nodes: Option<&HashSet<usize>>,
+        _protocol_nodes: Option<&HashSet<usize>>,
+        _region_nodes: Option<&HashSet<usize>>,
+        _south_grid_nodes: Option<&HashSet<usize>>,
     ) -> bool {
         let node_protocol = node.attributes.get("protocol");
         let node_region = node.attributes.get("region");

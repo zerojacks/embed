@@ -534,7 +534,7 @@ impl Frame645 {
                         None,
                     )
                 } else {
-                    let (sub_length, new_datament) = FrameCsg::recalculate_sub_length(
+                    let (sub_length, _new_datament) = FrameCsg::recalculate_sub_length(
                         &mut data_item_elem,
                         data_content,
                         protocol,
@@ -667,9 +667,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let length = frame.len();
         let err_code = frame[10];
@@ -714,7 +714,7 @@ impl Frame645 {
         dir: u8,
     ) {
         let data_identifier = &frame[10..14];
-        let data_length = frame[9];
+        let _data_length = frame[9];
         let seq = frame[frame.len() - 3];
         let length = frame.len();
         let data_identifier_str = FrameFun::get_data_str_delete_33h_reverse(data_identifier);
@@ -882,7 +882,7 @@ impl Frame645 {
         dir: u8,
     ) {
         let data_identifier = &frame[10..14];
-        let data_length = frame[9];
+        let _data_length = frame[9];
         let password = &frame[14..18];
         let operator = &frame[18..22];
         let length = frame.len();
@@ -995,9 +995,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let err_code = frame[frame.len() - 3];
         let err_str = if err_code != 0 {
@@ -1021,13 +1021,13 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let address = &frame[10..16];
         let mut data_list = Vec::new();
-        let length = frame.len();
+        let _length = frame.len();
         FrameFun::add_data(
             &mut data_list,
             "数据内容".to_string(),

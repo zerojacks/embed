@@ -679,9 +679,9 @@ impl FrameAnalisyic {
         data_segment: &[u8],
         index: usize,
         need_delete: bool,
-        protocol: &str,
-        region: &str,
-        dir: Option<u8>,
+        _protocol: &str,
+        _region: &str,
+        _dir: Option<u8>,
     ) -> Option<String> {
         let subitem_decimal = data_item_elem.get_child_text("decimal");
         let is_sign = data_item_elem.get_child_text("sign");
@@ -719,9 +719,9 @@ impl FrameAnalisyic {
         data_segment: &[u8],
         index: usize,
         need_delete: bool,
-        protocol: &str,
-        region: &str,
-        dir: Option<u8>,
+        _protocol: &str,
+        _region: &str,
+        _dir: Option<u8>,
     ) -> (Vec<Value>, usize) {
         let mut sub_item_result: Vec<Value> = Vec::new();
         let pos = data_segment.len();
@@ -789,11 +789,11 @@ impl FrameAnalisyic {
     pub fn prase_time_item(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
-        protocol: &str,
-        region: &str,
-        dir: Option<u8>,
+        _protocol: &str,
+        _region: &str,
+        _dir: Option<u8>,
     ) -> (String, Option<Vec<Value>>, usize) {
         // 获取 time 格式和 type
         let subitem_time_format = data_item_elem.get_child_text("time");
@@ -875,7 +875,7 @@ impl FrameAnalisyic {
 
         let mut subitem_length: usize;
         if data_item_elem.get_child("splitbit").is_some() {
-            let (sub_result, length) = Self::parse_bitwise_data(
+            let (sub_result, _length) = Self::parse_bitwise_data(
                 data_item_elem,
                 sub_data_segment,
                 index,
@@ -1141,10 +1141,10 @@ impl FrameAnalisyic {
         let mut item_result: Vec<Value> = Vec::new();
         let mut pos = 0;
         let sub_data_segment = data_segment;
-        let mut cur_length: usize;
-        let mut result_str: String;
+        let mut _cur_length: usize;
+        let mut _result_str: String;
 
-        let mut subitem_length: usize;
+        let mut _subitem_length: usize;
         let mut subitem_content = sub_data_segment;
 
         let all_items = data_item_elem.get_items("item");

@@ -1,5 +1,3 @@
-use tracing::{error, info, warn};
-
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 #[cfg(feature = "wasm")]

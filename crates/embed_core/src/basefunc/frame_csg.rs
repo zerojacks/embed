@@ -2054,18 +2054,23 @@ impl FrameCsg {
             pos += sub_length + 4;
             num += 1;
             if length - pos == 16 {
-                pw = Self::guest_is_exit_pw(
-                    length,
-                    pw_data,
-                    None,
-                    None,
-                    false,
-                    protocol,
-                    region,
-                    Some(dir),
-                );
-                if pw {
-                    length -= 16;
+                if pos + 6 < data_segment.len() {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    pw = Self::guest_is_exit_pw(
+                        length,
+                        pw_data,
+                        m_data_item_elem,
+                        None,
+                        false,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
+                    if pw {
+                        length -= 16;
+                    }
                 }
             }
         }
@@ -2275,18 +2280,23 @@ impl FrameCsg {
             pos += sub_length + 4;
             num += 1;
             if length - pos == 16 {
-                pw = Self::guest_is_exit_pw(
-                    length,
-                    pw_data,
-                    None,
-                    None,
-                    false,
-                    protocol,
-                    region,
-                    Some(dir),
-                );
-                if pw {
-                    length -= 16;
+                if pos + 6 < data_segment.len() {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    pw = Self::guest_is_exit_pw(
+                        length,
+                        pw_data,
+                        m_data_item_elem,
+                        None,
+                        false,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
+                    if pw {
+                        length -= 16;
+                    }
                 }
             }
         }
@@ -2497,19 +2507,23 @@ impl FrameCsg {
             pos += sub_length + 4;
             num += 1;
             if length - pos == 16 {
-                pw = Self::guest_is_exit_pw(
-                    length,
-                    pw_data,
-                    None,
-                    None,
-                    false,
-                    protocol,
-                    region,
-                    Some(dir),
-                );
-
-                if pw {
-                    length -= 16;
+                if pos + 6 < data_segment.len() {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    pw = Self::guest_is_exit_pw(
+                        length,
+                        pw_data,
+                        m_data_item_elem,
+                        None,
+                        false,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
+                    if pw {
+                        length -= 16;
+                    }
                 }
             }
         }
@@ -2706,32 +2720,42 @@ impl FrameCsg {
                     num += 1;
 
                     if length - pos == 16 {
-                        pw = Self::guest_is_exit_pw(
-                            length,
-                            pw_data,
-                            None,
-                            None,
-                            false,
-                            protocol,
-                            region,
-                            Some(dir),
-                        );
-                        if pw {
-                            length -= 16;
+                        if pos + 6 < data_segment.len() {
+                            let m_item = &data_segment[pos + 2..pos + 6];
+                            let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            pw = Self::guest_is_exit_pw(
+                                length,
+                                pw_data,
+                                m_data_item_elem,
+                                None,
+                                false,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
+                            if pw {
+                                length -= 16;
+                            }
                         }
                     }
                 } else {
                     if dir == 1 && prm == 0 {
-                        pw = Self::guest_is_exit_pw(
-                            length,
-                            &pw_data,
-                            None,
-                            None,
-                            false,
-                            protocol,
-                            region,
-                            Some(dir),
-                        );
+                        if pos + 6 < data_segment.len() {
+                            let m_item = &data_segment[pos + 2..pos + 6];
+                            let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            pw = Self::guest_is_exit_pw(
+                                length,
+                                pw_data,
+                                m_data_item_elem,
+                                None,
+                                false,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
+                        }
                         let err_str =
                             format!("未查找到数据标识：{},请检查配置文件！", data_item).to_string();
                         let err = CustomError::new(1, err_str);
@@ -2951,33 +2975,42 @@ impl FrameCsg {
                     num += 1;
 
                     if length - pos == 16 {
-                        pw = Self::guest_is_exit_pw(
-                            length,
-                            pw_data,
-                            None,
-                            None,
-                            false,
-                            protocol,
-                            region,
-                            Some(dir),
-                        );
-
-                        if pw {
-                            length -= 16;
+                        if pos + 6 < data_segment.len() {
+                            let m_item = &data_segment[pos + 2..pos + 6];
+                            let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            pw = Self::guest_is_exit_pw(
+                                length,
+                                pw_data,
+                                m_data_item_elem,
+                                None,
+                                false,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
+                            if pw {
+                                length -= 16;
+                            }
                         }
                     }
                 } else {
                     if dir == 1 && prm == 0 {
-                        pw = Self::guest_is_exit_pw(
-                            length,
-                            &pw_data,
-                            None,
-                            None,
-                            false,
-                            protocol,
-                            region,
-                            Some(dir),
-                        );
+                        if pos + 6 < data_segment.len() {
+                            let m_item = &data_segment[pos + 2..pos + 6];
+                            let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            pw = Self::guest_is_exit_pw(
+                                length,
+                                pw_data,
+                                m_data_item_elem,
+                                None,
+                                false,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
+                        }
                         let err_str = format!("数据解析失败!").to_string();
                         let err = CustomError::new(1, err_str);
                         return Err(err);
@@ -3295,16 +3328,19 @@ impl FrameCsg {
                 num += 1;
 
                 if length - pos == 16 {
-                    pw = Self::guest_is_exit_pw(
-                        length,
-                        pw_data,
-                        data_item_elem.clone(),
-                        last_data_time,
-                        true,
-                        protocol,
-                        region,
-                        Some(dir),
-                    );
+                    let left_data = &data_segment[pos..pos + 16];
+                    if left_data == pw_data {
+                        pw = Self::guest_is_exit_pw(
+                            length,
+                            pw_data,
+                            data_item_elem.clone(),
+                            last_data_time,
+                            true,
+                            protocol,
+                            region,
+                            Some(dir),
+                        );
+                    }
                     if pw {
                         length -= 16;
                     }
@@ -3503,10 +3539,13 @@ impl FrameCsg {
                     num += 1;
 
                     if length - pos == 16 {
+                        let m_item = &data_segment[pos + 2..pos + 6];
+                        let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                         pw = Self::guest_is_exit_pw(
                             length,
                             pw_data,
-                            None,
+                            m_data_item_elem,
                             None,
                             false,
                             protocol,
@@ -3550,10 +3589,13 @@ impl FrameCsg {
                     num += 1;
 
                     if length - pos == 16 {
+                        let m_item = &data_segment[pos + 2..pos + 6];
+                        let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                         pw = Self::guest_is_exit_pw(
                             length,
                             pw_data,
-                            None,
+                            m_data_item_elem,
                             None,
                             false,
                             protocol,
@@ -3942,9 +3984,7 @@ impl FrameCsg {
                 pos += sub_length;
                 num += 1;
                 info!("num:{:?} length{:?} pos{:?} item_count * pncount{:?}", num, length, pos, item_count * pncount);
-                if length - pos == 16
-                    || length - pos == 22
-                    || ((num == (item_count * pncount)) && (length - pos >= 16))
+                if ((length-pos==16) || (length - pos == 22)) && (num == item_count * pncount)
                 {
                     info!("pw:{:?} pw_data:{:?}", pw, pw_data);
                     pw = Self::guest_is_exit_pw(
@@ -4255,10 +4295,13 @@ impl FrameCsg {
                 num += 1;
 
                 if length - pos == 16 {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                     pw = Self::guest_is_exit_pw(
                         length,
                         &pw_data,
-                        None,
+                        m_data_item_elem,
                         None,
                         false,
                         protocol,
@@ -4508,10 +4551,13 @@ impl FrameCsg {
             num += 1;
 
             if length - pos == 16 {
+                let m_item = &data_segment[pos + 2..pos + 6];
+                let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                 pw = Self::guest_is_exit_pw(
                     length,
                     pw_data,
-                    None,
+                    m_data_item_elem,
                     None,
                     false,
                     protocol,
@@ -4751,10 +4797,13 @@ impl FrameCsg {
                 num += 1;
 
                 if length - pos == 16 {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                     pw = Self::guest_is_exit_pw(
                         length,
-                        &pw_data,
-                        None,
+                        pw_data,
+                        m_data_item_elem,
                         None,
                         false,
                         protocol,
@@ -4953,10 +5002,13 @@ impl FrameCsg {
                 num += 1;
 
                 if length - pos == 16 {
+                    let m_item = &data_segment[pos + 2..pos + 6];
+                    let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
-                        None,
+                        m_data_item_elem,
                         None,
                         false,
                         protocol,
@@ -5186,10 +5238,13 @@ impl FrameCsg {
             pos += sub_length + 4;
             num += 1;
             if length - pos == 16 {
+                let m_item = &data_segment[pos + 2..pos + 6];
+                let m_data_item = FrameFun::get_data_str_reverser(m_item);
+                let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
                 pw = Self::guest_is_exit_pw(
                     length,
                     pw_data,
-                    None,
+                    m_data_item_elem,
                     None,
                     false,
                     protocol,
