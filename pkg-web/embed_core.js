@@ -78,11 +78,47 @@ export class FrameAnalyzer {
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v2;
     }
+    /**
+     * @param {string} main_yaml
+     * @param {string} sub_yaml_map_json
+     */
+    init_oad_map(main_yaml, sub_yaml_map_json) {
+        const ptr0 = passStringToWasm0(main_yaml, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(sub_yaml_map_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.frameanalyzer_init_oad_map(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
     constructor() {
         const ret = wasm.frameanalyzer_new();
         this.__wbg_ptr = ret >>> 0;
         FrameAnalyzerFinalization.register(this, this.__wbg_ptr, this);
         return this;
+    }
+    /**
+     * @param {string} item
+     * @param {string} input
+     * @param {string} protocol
+     * @param {string} region
+     * @returns {any}
+     */
+    parse_item_data(item, input, protocol, region) {
+        const ptr0 = passStringToWasm0(item, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(protocol, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(region, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ret = wasm.frameanalyzer_parse_item_data(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return takeFromExternrefTable0(ret[0]);
     }
     /**
      * Main frame processing function - auto-detects protocol and analyzes frame

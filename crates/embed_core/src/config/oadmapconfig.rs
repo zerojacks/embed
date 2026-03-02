@@ -8,6 +8,8 @@ use std::io::Read;
 #[cfg(feature = "desktop")]
 use std::path::Path;
 
+use tracing::info;
+
 #[derive(Debug, Deserialize, Serialize)]
 struct MainConfig {
     oad_list: Vec<OadItem>,
@@ -44,6 +46,13 @@ pub struct CompleteConfig {
 }
 
 impl CompleteConfig {
+    fn default() -> Self {
+        CompleteConfig {
+            main_config: MainConfig { oad_list: vec![] },
+            sub_configs: HashMap::new(),
+        }
+    }
+
     #[cfg(feature = "desktop")]
     fn new(config_path: &Path) -> Result<Self, Box<dyn std::error::Error>> {
         let main_config = Self::load_main_config(config_path)?;
@@ -66,18 +75,22 @@ impl CompleteConfig {
     }
 
     #[cfg(not(feature = "desktop"))]
-    fn new_from_strs(main_yaml: &str, sub_yaml_map: &HashMap<String, String>) -> Result<Self, Box<dyn std::error::Error>> {
+    fn new_from_strs(
+        main_yaml: &str,
+        sub_yaml_map: &HashMap<String, String>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let main_config: MainConfig = serde_yaml::from_str(main_yaml)?;
         let mut sub_configs = HashMap::new();
         for oad_item in &main_config.oad_list {
-            let _file_path = oad_item.file_path.trim_start_matches("!inc ");
-            // use name to lookup
             if let Some(sub_yaml) = sub_yaml_map.get(&oad_item.name) {
                 let sub_config: SubConfig = serde_yaml::from_str(sub_yaml)?;
                 sub_configs.insert(oad_item.master_oad.clone(), sub_config);
             }
         }
-        Ok(CompleteConfig { main_config, sub_configs })
+        Ok(CompleteConfig {
+            main_config,
+            sub_configs,
+        })
     }
 
     #[cfg(feature = "desktop")]
@@ -129,18 +142,9 @@ lazy_static! {
 }
 
 #[cfg(not(feature = "desktop"))]
-use std::sync::RwLock;
-#[cfg(not(feature = "desktop"))]
 lazy_static! {
-    static ref TASK_OAD_CONFIG: RwLock<Option<CompleteConfig>> = RwLock::new(None);
-}
-
-#[cfg(not(feature = "desktop"))]
-pub fn init_task_oad_from_strs(main_yaml: &str, sub_yaml_map: &HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
-    let cfg = CompleteConfig::new_from_strs(main_yaml, sub_yaml_map)?;
-    let mut guard = TASK_OAD_CONFIG.write().unwrap();
-    *guard = Some(cfg);
-    Ok(())
+    static ref TASK_OAD_CONFIG: std::sync::RwLock<CompleteConfig> =
+        std::sync::RwLock::new(CompleteConfig::default());
 }
 
 pub struct TaskOadConfigManager;
@@ -164,20 +168,17 @@ impl TaskOadConfigManager {
             }
             None
         }
+
         #[cfg(not(feature = "desktop"))]
         {
-            let guard = TASK_OAD_CONFIG.read().unwrap();
-            if guard.is_none() {
-                eprintln!("TASK_OAD_CONFIG not initialized");
-                return None;
-            }
-            let cfg = guard.as_ref().unwrap();
-            let config = cfg.get_config_by_master_oad(master_oad);
-            if config.is_none() {
+            let config = TASK_OAD_CONFIG.read().unwrap();
+            let sub_config = config.get_config_by_master_oad(master_oad);
+            if sub_config.is_none() {
                 eprintln!("找不到对应的配置列表: {}", master_oad);
                 return None;
             }
-            for (_list_name, items) in &config.unwrap().lists {
+            let sub_config = sub_config.unwrap();
+            for (list_name, items) in &sub_config.lists {
                 for item in items {
                     if item.v_oad.to_lowercase() == v_oad.to_lowercase() {
                         return Some(item.clone());
@@ -186,5 +187,44 @@ impl TaskOadConfigManager {
             }
             None
         }
+    }
+
+    #[cfg(not(feature = "desktop"))]
+    pub fn init(
+        main_yaml: &str,
+        sub_yaml_map: &HashMap<String, String>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let new_config = CompleteConfig::new_from_strs(main_yaml, sub_yaml_map)?;
+        let mut config = TASK_OAD_CONFIG.write().unwrap();
+        *config = new_config;
+        Ok(())
+    }
+
+    #[cfg(feature = "desktop")]
+    pub fn init(
+        _main_yaml: &str,
+        _sub_yaml_map: &HashMap<String, String>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Desktop 模式下配置在编译时已经加载，不需要运行时初始化
+        Ok(())
+    }
+
+    pub fn default() -> Result<(), Box<dyn std::error::Error>> {
+        let main_yaml = include_str!("../../../../public/config/oad_list.yml");
+        let mut sub_yaml_map = HashMap::new();
+
+        sub_yaml_map.insert(
+            "Vir_50020200_List".to_string(),
+            include_str!("../../../../public/config/50020200_list.yml").to_string(),
+        );
+        sub_yaml_map.insert(
+            "Vir_50040200_List".to_string(),
+            include_str!("../../../../public/config/50040200_list.yml").to_string(),
+        );
+        sub_yaml_map.insert(
+            "Vir_50060200_List".to_string(),
+            include_str!("../../../../public/config/50060200_list.yml").to_string(),
+        );
+        Self::init(main_yaml, &sub_yaml_map)
     }
 }

@@ -16,6 +16,7 @@ interface WasmContextType {
     getAvailableProtocols: () => string[]
     updateProtocolConfig: (protocol: ProtocolType, content: string) => Promise<void>
     resetProtocolConfig: (protocol: ProtocolType) => Promise<void>
+    praseItemData(item: string, data: string, protocol: ProtocolType, region: string): Promise<AnalysisResult>
 }
 
 const WasmContext = createContext<WasmContextType | null>(null)
@@ -147,6 +148,32 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
+    const praseItemData = async (item: string, data: string, protocol: ProtocolType, region: string): Promise<AnalysisResult> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            console.log("解析数据", item, data, protocol, region)
+            const result = analyzer.parse_item_data(item, data, protocol, region)
+            const parsedResult = JSON.parse(result)
+
+            return {
+                protocol: parsedResult.protocol || protocol,
+                region: parsedResult.region || region,
+                data: parsedResult.data || [{ item: item, value: data }],
+                success: true
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '数据项解析失败'
+            toast.error(errorMessage)
+            return {
+                protocol: protocol,
+                region: region,
+                data: [],
+                success: false
+            }
+        }
+    }
     const contextValue: WasmContextType = {
         analyzer,
         isLoading,
@@ -157,7 +184,8 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         convertBytesToHex,
         getAvailableProtocols,
         updateProtocolConfig,
-        resetProtocolConfig
+        resetProtocolConfig,
+        praseItemData
     }
 
     return (

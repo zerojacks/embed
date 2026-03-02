@@ -1,4 +1,8 @@
+import { useThemeStore } from '../stores/useThemeStore'
+
 export default function ThemeToggle() {
+  const { theme, setTheme } = useThemeStore()
+
   return (
     <div className="dropdown dropdown-end">
       <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
@@ -13,22 +17,32 @@ export default function ThemeToggle() {
       </div>
       <ul tabIndex={0} className="dropdown-content bg-base-200 rounded-box z-1 w-52 p-2 shadow-2xl">
         <li>
-          <input
-            type="radio"
-            name="theme-dropdown"
-            className="theme-controller btn btn-sm btn-block btn-ghost justify-start"
-            aria-label="Light"
-            value="light"
-          />
+          <label className="flex cursor-pointer items-center gap-2 p-2 rounded hover:bg-base-300">
+            <input
+              type="radio"
+              name="theme-dropdown"
+              className="theme-controller radio radio-sm"
+              aria-label="Light"
+              value="light"
+              checked={theme === 'light'}
+              onChange={() => setTheme('light')}
+            />
+            <span className="text-sm">Light</span>
+          </label>
         </li>
         <li>
-          <input
-            type="radio"
-            name="theme-dropdown"
-            className="theme-controller btn btn-sm btn-block btn-ghost justify-start"
-            aria-label="Dark"
-            value="dark"
-          />
+          <label className="flex cursor-pointer items-center gap-2 p-2 rounded hover:bg-base-300">
+            <input
+              type="radio"
+              name="theme-dropdown"
+              className="theme-controller radio radio-sm"
+              aria-label="Dark"
+              value="dark"
+              checked={theme === 'dark'}
+              onChange={() => setTheme('dark')}
+            />
+            <span className="text-sm">Dark</span>
+          </label>
         </li>
       </ul>
     </div>

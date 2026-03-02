@@ -20,7 +20,9 @@ export class FrameAnalyzer {
      * Convert hex string to byte array
      */
     hex_to_bytes(hex_string: string): Uint8Array;
+    init_oad_map(main_yaml: string, sub_yaml_map_json: string): void;
     constructor();
+    parse_item_data(item: string, input: string, protocol: string, region: string): any;
     /**
      * Main frame processing function - auto-detects protocol and analyzes frame
      */
@@ -42,6 +44,8 @@ export interface InitOutput {
     readonly frameanalyzer_get_available_protocols: (a: number) => [number, number];
     readonly frameanalyzer_update_protocol_config: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly frameanalyzer_reset_protocol_config: (a: number, b: number, c: number) => [number, number];
+    readonly frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
