@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { ArrowLeft, Calculator, Copy, CheckCircle, AlertCircle, Info, Edit, Target } from 'lucide-react'
+import { pppFcs16 } from '../../utils/pppFcs'
 
 export default function ChecksumPage() {
   const [input, setInput] = useState('')
@@ -15,6 +16,7 @@ export default function ChecksumPage() {
     ccitt_false: { name: 'CRC16-CCITT-FALSE', poly: 0x1021, init: 0xFFFF, refIn: false, refOut: false, xorOut: 0x0000 },
     xmodem: { name: 'CRC16-XMODEM', poly: 0x1021, init: 0x0000, refIn: false, refOut: false, xorOut: 0x0000 },
     x25: { name: 'CRC16-X25', poly: 0x1021, init: 0xFFFF, refIn: true, refOut: true, xorOut: 0xFFFF },
+    ppp: { name: 'CRC16-PPP FCS', poly: 0x1021, init: 0xFFFF, refIn: true, refOut: true, xorOut: 0xFFFF },
     usb: { name: 'CRC16-USB', poly: 0x8005, init: 0xFFFF, refIn: true, refOut: true, xorOut: 0xFFFF },
     ibm: { name: 'CRC16-IBM', poly: 0x8005, init: 0x0000, refIn: true, refOut: true, xorOut: 0x0000 }
   }
@@ -28,50 +30,50 @@ export default function ChecksumPage() {
   }
 
   const calculateChecksum = (data: string, type: 'sum' | 'xor' | 'crc16' | 'crc32') => {
-    if (!data.trim()) return ''
+    if (!data.trim()) return { value: 0, error: '' }
 
     try {
       const cleanData = data.replace(/\s+/g, '')
-      if (cleanData.length % 2 !== 0) return 'Error: 数据长度必须是偶数'
+      if (cleanData.length % 2 !== 0) return { value: 0, error: 'Error: 数据长度必须是偶数' }
 
       const bytes: number[] = []
       for (let i = 0; i < cleanData.length; i += 2) {
         const byte = parseInt(cleanData.substr(i, 2), 16)
-        if (isNaN(byte)) return 'Error: 包含无效的十六进制字符'
+        if (isNaN(byte)) return { value: 0, error: 'Error: 包含无效的十六进制字符' }
         bytes.push(byte)
       }
 
       switch (type) {
         case 'sum':
-          return calculateSum(bytes)
+          return { value: calculateSum(bytes), error: '' }
         case 'xor':
-          return calculateXor(bytes)
+          return { value: calculateXor(bytes), error: '' }
         case 'crc16':
-          return calculateCRC16(bytes)
+          return { value: calculateCRC16(bytes), error: '' }
         case 'crc32':
-          return calculateCRC32(bytes)
+          return { value: calculateCRC32(bytes), error: '' }
         default:
-          return ''
+          return { value: 0, error: '' }
       }
     } catch (error) {
-      return 'Error: 计算失败'
+      return { value: 0, error: 'Error: 计算失败' }
     }
   }
 
-  const calculateSum = (bytes: number[]): string => {
+  const calculateSum = (bytes: number[]): number => {
     const sum = bytes.reduce((acc, byte) => acc + byte, 0)
-    return (sum & 0xFF).toString(16).toUpperCase().padStart(2, '0')
+    return sum & 0xFF
   }
 
-  const calculateXor = (bytes: number[]): string => {
+  const calculateXor = (bytes: number[]): number => {
     const xor = bytes.reduce((acc, byte) => acc ^ byte, 0)
-    return xor.toString(16).toUpperCase().padStart(2, '0')
+    return xor
   }
 
-  // 通用 CRC 计算函数
-  const calculateGenericCRC = (bytes: number[], config: any, width: number): string => {
+  // 通用 CRC 计算函数 - 返回数值
+  const calculateGenericCRCNumber = (bytes: number[], config: any, width: number): number => {
     const { poly, init, refIn, refOut, xorOut } = config
-    
+
     // 反转字节位序
     const reverseBits = (value: number, bits: number): number => {
       let result = 0
@@ -87,7 +89,7 @@ export default function ChecksumPage() {
 
     for (const byte of bytes) {
       const data = refIn ? reverseBits(byte, 8) : byte
-      
+
       if (width === 16) {
         crc ^= data << 8
         for (let i = 0; i < 8; i++) {
@@ -114,17 +116,23 @@ export default function ChecksumPage() {
     if (refOut) {
       crc = reverseBits(crc, width)
     }
-    
+
     crc ^= xorOut
     crc &= mask
 
-    return crc.toString(16).toUpperCase().padStart(width / 4, '0')
+    return crc
   }
 
-  const calculateCRC16 = (bytes: number[]): string => {
+  const calculateCRC16 = (bytes: number[]): number => {
     const variant = crc16Variants[crcVariant as keyof typeof crc16Variants]
-    if (!variant) return 'Error: 未知的CRC16变体'
-    
+    if (!variant) return 0
+
+    // 使用专门的PPP FCS算法
+    if (crcVariant === 'ppp') {
+      const fcs = pppFcs16(0xFFFF, bytes)
+      return fcs & 0xFFFF
+    }
+
     // 对于反向多项式的算法（如MODBUS），使用查表法
     if (variant.refIn && variant.refOut) {
       let crc = variant.init
@@ -140,19 +148,19 @@ export default function ChecksumPage() {
           }
         }
       }
-      
+
       crc ^= variant.xorOut
-      return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0')
+      return crc & 0xFFFF
     } else {
-      // 使用通用算法
-      return calculateGenericCRC(bytes, variant, 16)
+      // 使用通用算法 - 需要修改为返回数值
+      return calculateGenericCRCNumber(bytes, variant, 16)
     }
   }
 
-  const calculateCRC32 = (bytes: number[]): string => {
+  const calculateCRC32 = (bytes: number[]): number => {
     const variant = crc32Variants[crcVariant as keyof typeof crc32Variants]
-    if (!variant) return 'Error: 未知的CRC32变体'
-    
+    if (!variant) return 0
+
     // 使用查表法优化
     const crcTable: number[] = []
     for (let i = 0; i < 256; i++) {
@@ -178,7 +186,7 @@ export default function ChecksumPage() {
     }
 
     crc ^= variant.xorOut
-    return (crc >>> 0).toString(16).toUpperCase().padStart(8, '0')
+    return crc >>> 0
   }
 
   const result = calculateChecksum(input, checksumType)
@@ -198,29 +206,6 @@ export default function ChecksumPage() {
     const formatted = cleaned.replace(/(.{2})/g, '$1 ').trim().toUpperCase()
     setInput(formatted)
   }
-
-  const examples = [
-    {
-      name: 'DLT645 帧头',
-      data: '68 10 10 68',
-      desc: 'DLT645协议帧头部分'
-    },
-    {
-      name: '简单数据',
-      data: 'AA BB CC DD',
-      desc: '4字节测试数据'
-    },
-    {
-      name: '长数据',
-      data: '68 10 10 68 AA AA AA AA AA AA 81 16',
-      desc: '完整的DLT645报文示例'
-    },
-    {
-      name: '单字节',
-      data: 'FF',
-      desc: '单字节最大值'
-    }
-  ]
 
   return (
     <div className="h-full flex flex-col">
@@ -327,13 +312,13 @@ export default function ChecksumPage() {
                 </div>
 
                 <div className="card-actions justify-between mt-4">
-                  <button 
+                  <button
                     className="btn btn-outline btn-sm"
                     onClick={() => setInput('')}
                   >
                     清空
                   </button>
-                  <button 
+                  <button
                     className="btn btn-primary btn-sm"
                     onClick={formatInput}
                   >
@@ -365,7 +350,7 @@ export default function ChecksumPage() {
                       {checksumType === 'crc16' && (() => {
                         const variant = crc16Variants[crcVariant as keyof typeof crc16Variants]
                         if (!variant) return null
-                        
+
                         // 获取多项式函数表达式
                         const getPolynomialFunction = (poly: number) => {
                           switch (poly) {
@@ -379,7 +364,7 @@ export default function ChecksumPage() {
                               return `多项式: 0x${poly.toString(16).toUpperCase()}`
                           }
                         }
-                        
+
                         return (
                           <>
                             <div><span className="font-semibold">多项式:</span> 0x{variant.poly.toString(16).toUpperCase()}</div>
@@ -399,7 +384,7 @@ export default function ChecksumPage() {
                       {checksumType === 'crc32' && (() => {
                         const variant = crc32Variants[crcVariant as keyof typeof crc32Variants]
                         if (!variant) return null
-                        
+
                         // 获取多项式函数表达式
                         const getPolynomialFunction = (poly: number) => {
                           switch (poly) {
@@ -415,7 +400,7 @@ export default function ChecksumPage() {
                               return `多项式: 0x${poly.toString(16).toUpperCase()}`
                           }
                         }
-                        
+
                         return (
                           <>
                             <div><span className="font-semibold">多项式:</span> 0x{variant.poly.toString(16).toUpperCase()}</div>
@@ -446,59 +431,107 @@ export default function ChecksumPage() {
                   校验结果
                 </h2>
 
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      {checksumType === 'sum' && '求和校验值'}
-                      {checksumType === 'xor' && '异或校验值'}
-                      {checksumType === 'crc16' && 'CRC16 校验值'}
-                      {checksumType === 'crc32' && 'CRC32 校验值'}
-                    </span>
-                  </label>
-                  <div className="join">
-                    <input
-                      type="text"
-                      className={`input input-bordered join-item flex-1 font-mono text-lg ${
-                        result.startsWith('Error') ? 'input-error' : 'input-success'
-                      }`}
-                      value={result}
-                      readOnly
-                      placeholder="校验结果将显示在这里"
-                    />
-                    <button
-                      className="btn btn-outline join-item"
-                      onClick={() => copyToClipboard(result)}
-                      disabled={!result || result.startsWith('Error')}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
+                {/* 始终显示十六进制和十进制结果框 */}
+                <div className="space-y-4">
+                  {/* 十六进制结果 */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold w-20 inline-block">十六进制</span>
+                    </label>
+                    <div className="join">
+                      <input
+                        type="text"
+                        className={`input input-bordered join-item flex-1 font-mono text-lg ${result.error ? 'input-error' :
+                          (result.value > 0 || input.trim()) ? 'input-success' : ''
+                          }`}
+                        value={
+                          result.error ||
+                          (result.value > 0 ?
+                            result.value.toString(16).toUpperCase().padStart(
+                              checksumType === 'sum' || checksumType === 'xor' ? 2 :
+                                checksumType === 'crc16' ? 4 : 8, '0'
+                            ) : ''
+                          )
+                        }
+                        readOnly
+                        placeholder="十六进制结果"
+                      />
+                      <button
+                        className="btn btn-outline join-item"
+                        onClick={() => copyToClipboard(
+                          result.error ||
+                          (result.value > 0 ?
+                            result.value.toString(16).toUpperCase().padStart(
+                              checksumType === 'sum' || checksumType === 'xor' ? 2 :
+                                checksumType === 'crc16' ? 4 : 8, '0'
+                            ) : ''
+                          )
+                        )}
+                        disabled={!!result.error || result.value === 0}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 十进制结果 */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold w-20 inline-block">十进制</span>
+                    </label>
+                    <div className="join">
+                      <input
+                        type="text"
+                        className={`input input-bordered join-item flex-1 font-mono text-lg ${result.error ? 'input-error' :
+                          (result.value > 0 || input.trim()) ? 'input-success' : ''
+                          }`}
+                        value={result.error || (result.value > 0 ? result.value.toString() : '')}
+                        readOnly
+                        placeholder="十进制结果"
+                      />
+                      <button
+                        className="btn btn-outline join-item"
+                        onClick={() => copyToClipboard(
+                          result.error || (result.value > 0 ? result.value.toString() : '')
+                        )}
+                        disabled={!!result.error || result.value === 0}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {result && !result.startsWith('Error') && (
+                {result.value > 0 && !result.error && (
                   <div className="alert alert-success mt-4">
                     <CheckCircle className="w-6 h-6 shrink-0" />
                     <div>
                       <h3 className="font-bold">计算完成!</h3>
                       <div className="text-xs">
-                        校验值: <span className="font-mono font-bold">{result}</span>
+                        <div>十六进制: <span className="font-mono font-bold">
+                          {result.value.toString(16).toUpperCase().padStart(
+                            checksumType === 'sum' || checksumType === 'xor' ? 2 :
+                              checksumType === 'crc16' ? 4 : 8, '0'
+                          )}
+                        </span></div>
+                        <div>十进制: <span className="font-mono font-bold">{result.value}</span></div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {result.startsWith('Error') && (
+                {result.error && (
                   <div className="alert alert-error mt-4">
                     <AlertCircle className="w-6 h-6 shrink-0" />
                     <div>
                       <h3 className="font-bold">计算失败</h3>
-                      <div className="text-xs">{result}</div>
+                      <div className="text-xs">{result.error}</div>
                     </div>
                   </div>
                 )}
 
                 {/* Data Statistics */}
-                {input && !result.startsWith('Error') && (
+                {input && !result.error && (
                   <div className="stats shadow mt-4">
                     <div className="stat py-2">
                       <div className="stat-title text-xs">数据长度</div>
@@ -512,30 +545,6 @@ export default function ChecksumPage() {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Examples */}
-          <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-4">示例数据</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {examples.map((example, index) => (
-                <div key={index} className="card bg-base-100 shadow-sm border border-base-300">
-                  <div className="card-body p-4">
-                    <h3 className="font-semibold text-sm mb-2">{example.name}</h3>
-                    <div className="font-mono text-xs bg-base-200 p-2 rounded mb-2">
-                      {example.data}
-                    </div>
-                    <p className="text-xs text-base-content/70 mb-2">{example.desc}</p>
-                    <button
-                      className="btn btn-xs btn-outline w-full"
-                      onClick={() => setInput(example.data)}
-                    >
-                      使用此例
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
