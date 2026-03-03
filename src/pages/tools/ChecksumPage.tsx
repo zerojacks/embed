@@ -431,43 +431,37 @@ export default function ChecksumPage() {
                   校验结果
                 </h2>
 
-                {/* 始终显示十六进制和十进制结果框 */}
+                {/* 始终显示十六进制和十进制结果 */}
                 <div className="space-y-4">
                   {/* 十六进制结果 */}
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold w-20 inline-block">十六进制</span>
-                    </label>
-                    <div className="join">
-                      <input
-                        type="text"
-                        className={`input input-bordered join-item flex-1 font-mono text-lg ${result.error ? 'input-error' :
-                          (result.value > 0 || input.trim()) ? 'input-success' : ''
-                          }`}
-                        value={
-                          result.error ||
-                          (result.value > 0 ?
-                            result.value.toString(16).toUpperCase().padStart(
-                              checksumType === 'sum' || checksumType === 'xor' ? 2 :
-                                checksumType === 'crc16' ? 4 : 8, '0'
-                            ) : ''
-                          )
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold w-20">十六进制</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-[3rem] flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
+                          (result.value > 0) ? 'border-success bg-success/10 text-success' :
+                            'border-base-300 bg-base-200 text-base-content/50'
+                        }`}>
+                        {result.value > 0 ?
+                          result.value.toString(16).toUpperCase().padStart(
+                            checksumType === 'sum' || checksumType === 'xor' ? 2 :
+                              checksumType === 'crc16' ? 4 : 8, '0'
+                          ) :
+                          '十六进制结果'
                         }
-                        readOnly
-                        placeholder="十六进制结果"
-                      />
+                      </div>
                       <button
-                        className="btn btn-outline join-item"
+                        className="btn btn-outline btn-square"
                         onClick={() => copyToClipboard(
-                          result.error ||
-                          (result.value > 0 ?
+                          result.value > 0 ?
                             result.value.toString(16).toUpperCase().padStart(
                               checksumType === 'sum' || checksumType === 'xor' ? 2 :
                                 checksumType === 'crc16' ? 4 : 8, '0'
                             ) : ''
-                          )
                         )}
                         disabled={!!result.error || result.value === 0}
+                        title="复制十六进制结果"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
@@ -475,26 +469,24 @@ export default function ChecksumPage() {
                   </div>
 
                   {/* 十进制结果 */}
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold w-20 inline-block">十进制</span>
-                    </label>
-                    <div className="join">
-                      <input
-                        type="text"
-                        className={`input input-bordered join-item flex-1 font-mono text-lg ${result.error ? 'input-error' :
-                          (result.value > 0 || input.trim()) ? 'input-success' : ''
-                          }`}
-                        value={result.error || (result.value > 0 ? result.value.toString() : '')}
-                        readOnly
-                        placeholder="十进制结果"
-                      />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold w-20">十进制</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-[3rem] flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
+                          (result.value > 0) ? 'border-success bg-success/10 text-success' :
+                            'border-base-300 bg-base-200 text-base-content/50'
+                        }`}>
+                        {result.value > 0 ? result.value.toString() : '十进制结果'}
+                      </div>
                       <button
-                        className="btn btn-outline join-item"
+                        className="btn btn-outline btn-square"
                         onClick={() => copyToClipboard(
-                          result.error || (result.value > 0 ? result.value.toString() : '')
+                          result.value > 0 ? result.value.toString() : ''
                         )}
                         disabled={!!result.error || result.value === 0}
+                        title="复制十进制结果"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
