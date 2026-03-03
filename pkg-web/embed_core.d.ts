@@ -8,6 +8,7 @@ export class FrameAnalyzer {
      * Convert byte array to hex string with spaces
      */
     bytes_to_hex(data: Uint8Array): string;
+    da_and_measure_point_exchange(input: string, convert_type: string, continuous: boolean): string;
     /**
      * Get available protocols
      */
@@ -46,6 +47,7 @@ export interface InitOutput {
     readonly frameanalyzer_reset_protocol_config: (a: number, b: number, c: number) => [number, number];
     readonly frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
+    readonly frameanalyzer_da_and_measure_point_exchange: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;

@@ -27,6 +27,18 @@ const tools = [
     status: 'available'
   },
   {
+    id: 'measurement-points',
+    title: '测量点转换',
+    description: '测量点与DA值相互转换工具',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 12l2 2 4-4" />
+      </svg>
+    ),
+    color: 'secondary',
+    status: 'available'
+  },
+  {
     id: 'converter',
     title: '编码转换',
     description: '十六进制、ASCII、Base64 转换',
@@ -35,7 +47,7 @@ const tools = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
       </svg>
     ),
-    color: 'secondary',
+    color: 'accent',
     status: 'available'
   },
   {
@@ -47,7 +59,7 @@ const tools = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    color: 'accent',
+    color: 'info',
     status: 'available'
   },
   {
@@ -59,7 +71,7 @@ const tools = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    color: 'info',
+    color: 'warning',
     status: 'available'
   },
   {
@@ -71,7 +83,7 @@ const tools = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
     ),
-    color: 'warning',
+    color: 'primary',
     status: 'coming-soon'
   },
   {

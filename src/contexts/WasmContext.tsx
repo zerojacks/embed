@@ -17,6 +17,7 @@ interface WasmContextType {
     updateProtocolConfig: (protocol: ProtocolType, content: string) => Promise<void>
     resetProtocolConfig: (protocol: ProtocolType) => Promise<void>
     praseItemData(item: string, data: string, protocol: ProtocolType, region: string): Promise<AnalysisResult>
+    DaPointExchange(data: string, type: "da_to_point" | "point_to_da", contions: boolean): Promise<string>
 }
 
 const WasmContext = createContext<WasmContextType | null>(null)
@@ -174,6 +175,21 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
             }
         }
     }
+
+    const DaPointExchange = async (data: string, type : "da_to_point" | "point_to_da", contions: boolean): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            console.log("转换数据", type, data, contions)
+            const result = analyzer.da_and_measure_point_exchange(data, type, contions)
+            return result
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '数据转换失败'
+            toast.error(errorMessage)
+            return ""
+        }
+    }
     const contextValue: WasmContextType = {
         analyzer,
         isLoading,
@@ -185,7 +201,8 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         getAvailableProtocols,
         updateProtocolConfig,
         resetProtocolConfig,
-        praseItemData
+        praseItemData,
+        DaPointExchange
     }
 
     return (

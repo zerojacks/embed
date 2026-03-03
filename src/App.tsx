@@ -15,6 +15,7 @@ import ChecksumPage from './pages/tools/ChecksumPage'
 import GeneratorPage from './pages/tools/GeneratorPage'
 import StatisticsPage from './pages/tools/StatisticsPage'
 import ItemdataPrasePage from './pages/tools/ItemdataPrasePage'
+import MeasurementPointsPage from './pages/tools/MeasurementPointsPage'
 
 function App() {
   useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
               <Route path="tools/converter" element={<ConverterPage />} />
               <Route path="tools/timestamp" element={<TimestampPage />} />
               <Route path="tools/checksum" element={<ChecksumPage />} />
+              <Route path="tools/measurement-points" element={<MeasurementPointsPage />} />
               <Route path="tools/generator" element={<GeneratorPage />} />
               <Route path="tools/statistics" element={<StatisticsPage />} />
               <Route path="tools/itemdata-parse" element={<ItemdataPrasePage />} />

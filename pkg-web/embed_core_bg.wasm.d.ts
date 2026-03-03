@@ -12,6 +12,7 @@ export const frameanalyzer_update_protocol_config: (a: number, b: number, c: num
 export const frameanalyzer_reset_protocol_config: (a: number, b: number, c: number) => [number, number];
 export const frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
+export const frameanalyzer_da_and_measure_point_exchange: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
 export const __wbindgen_free: (a: number, b: number, c: number) => void;
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;

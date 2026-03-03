@@ -10,6 +10,7 @@ pub mod config;
 pub mod logger;
 // Re-export commonly used types for easier access
 pub use basefunc::frame_fun::FrameFun;
+pub use basefunc::frame_csg::FrameCsg;
 pub use basefunc::protocol::FrameAnalisyic;
 pub use config::oadmapconfig::TaskOadConfigManager;
 pub use config::xmlconfig::{ProtocolConfigManager, QframeConfig, XmlElement};
@@ -234,6 +235,150 @@ impl FrameAnalyzer {
             .unwrap_or_else(|e| format!("{{\"error\": \"Serialization error: {}\"}}", e));
 
         Ok(JsValue::from_str(&json_string))
+    }
+
+    #[wasm_bindgen]
+    pub fn da_and_measure_point_exchange(
+        &self,
+        input: String,
+        convert_type: String,
+        continuous: bool,
+    ) -> Result<String, String> {
+        // 清理输入字符串，移除空格和换行符
+        let cleaned_input = input.trim().to_string();
+    
+        match convert_type.as_str() {
+            "point_to_da" => {
+                let result = Self::try_convert_point_to_da(&cleaned_input, continuous)?;
+                Ok(result)
+            }
+            "da_to_point" => {
+                let result = Self::try_convert_da_to_point(&cleaned_input)?;
+                Ok(result)
+            }
+            _ => Err("Invalid convert type. Expected: point_to_da or da_to_point".to_string()),
+        }
+    }
+    
+    fn try_convert_point_to_da(input: &str, continuous: bool) -> Result<String, String> {
+        // 处理逗号分隔的多个范围
+        let ranges: Vec<&str> = input.split(',').collect();
+        let mut all_points = Vec::new();
+    
+        for range in ranges {
+            if range.is_empty() {
+                continue;
+            }
+    
+            if range.contains('-') {
+                // 处理范围格式 (如: 1-20)
+                let parts: Vec<&str> = range.split('-').collect();
+                if parts.len() != 2 {
+                    return Err(format!("无效的范围格式: {}", range));
+                }
+    
+                let start = parts[0]
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的起始数字: {}", parts[0]))?;
+                let end = parts[1]
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的结束数字: {}", parts[1]))?;
+    
+                if start > end {
+                    return Err(format!("起始数字必须小于或等于结束数字: {}", range));
+                }
+    
+                all_points.extend(start..=end);
+            } else {
+                // 处理单个数字
+                let point = range
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的数字: {}", range))?;
+                all_points.push(point);
+            }
+        }
+    
+        if all_points.is_empty() {
+            return Err("请输入有效的测量点".to_string());
+        }
+    
+        // 对点进行排序和去重
+        all_points.sort();
+        all_points.dedup();
+    
+        // 根据continuous参数选择转换方式
+        let da_pairs = if continuous {
+            FrameCsg::to_da_with_continuous(&all_points)
+        } else {
+            FrameCsg::to_da_with_single(&all_points)
+        };
+    
+        // 格式化输出
+        let result = da_pairs
+            .iter()
+            .map(|&(da1, da2)| format!("{:02X}{:02X}", da1, da2))
+            .collect::<Vec<String>>()
+            .join(",");
+    
+        Ok(result)
+    }
+    
+
+    fn try_convert_da_to_point(input: &str) -> Result<String, String> {
+        // 处理逗号分隔的多个DA值
+        let da_values: Vec<&str> = input.split(',').collect();
+        let mut all_results = Vec::new();
+    
+        if da_values.is_empty() || (da_values.len() == 1 && da_values[0].trim().is_empty()) {
+            return Err("请输入有效的DA值".to_string());
+        }
+    
+        for da_value in da_values {
+            let da_value = da_value.trim();
+            if da_value.is_empty() {
+                continue;
+            }
+    
+            // 移除可能的0x前缀
+            let da_value = da_value.trim_start_matches("0x");
+    
+            let da_cleaned = da_value.replace(' ', "").replace('\n', "");
+    
+            // 验证16进制格式
+            if !da_cleaned.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Err(format!("无效的16进制DA值: {}", da_cleaned));
+            }
+    
+            // 将16进制字符串转换为字节数组
+            let da = FrameFun::get_frame_list_from_str(&da_cleaned);
+    
+            if da.len() % 2 != 0 {
+                return Err(format!("DA长度错误: {}", da.len()));
+            }
+            let mut pos: usize = 0;
+            while pos < da.len() {
+                let da_data = &da[pos..pos + 2];
+                let (size, points) = FrameFun::calculate_measurement_points(&da_data);
+    
+                if size == 1 && points[0] == 0xFFFF {
+                    all_results.push("0xFFFF".to_string());
+                } else {
+                    let points_str = points
+                        .iter()
+                        .map(|&x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",");
+                    all_results.push(points_str);
+                }
+                pos += 2;
+            }
+        }
+    
+        if all_results.is_empty() {
+            return Err("转换结果为空".to_string());
+        }
+    
+        Ok(all_results.join(","))
     }
 }
 
