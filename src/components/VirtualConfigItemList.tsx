@@ -4,11 +4,9 @@ import type { ItemConfigList } from '@/types';
 // 轻量级配置项卡片组件
 const ConfigItemCard = React.memo(({
   item,
-  index,
   style
 }: {
   item: ItemConfigList;
-  index: number;
   style?: React.CSSProperties;
 }) => (
   <div
@@ -139,7 +137,6 @@ const VirtualConfigItemList: React.FC<VirtualConfigItemListProps> = ({
             >
               <ConfigItemCard
                 item={item}
-                index={index}
                 style={{ height: '100%' }}
               />
             </div>

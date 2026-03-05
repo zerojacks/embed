@@ -2,7 +2,7 @@ import { Group, Panel, Separator } from "react-resizable-panels"
 import { useFrameTreeStore } from '../stores/useFrameAnalysicStore'
 import { useSplitSizeStore } from '../stores/useSplitSizeSlice'
 import { useWasm } from '../contexts/WasmContext'
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { toast } from 'react-hot-toast'
 import { TreeTable } from "../components/treeview"
 import type { Column } from "../components/treeview"

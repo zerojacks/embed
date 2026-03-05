@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { AnalysisResult, ProtocolType, ProcessFrameResponse, ItemListResponse } from '../types'
+import type { AnalysisResult, ProtocolType, ProcessFrameResponse } from '../types'
 import { toast } from 'react-hot-toast'
 import { wasmManager } from '../utils/wasmManager'
 import { FrameAnalyzer } from '../../pkg-web/embed_core'
