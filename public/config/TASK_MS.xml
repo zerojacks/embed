@@ -40,10 +40,10 @@
             <length>1</length>
         </splitByLength>
         <splitByLength>
-            <name>用户地址</name>
+            <name>测量点号</name>
             <length>unknown</length>
-            <lengthrule>6 * 地址个数</lengthrule>
-            <type>ADRESS_TYPE</type>
+            <lengthrule>2 * 地址个数</lengthrule>
+            <type>BIN_BE</type>
         </splitByLength>
     </dataItem>
     <dataItem id="05" protocol="MS" region="南网">
