@@ -20,6 +20,14 @@ interface ProtocolConfig {
     fileSize?: number
 }
 
+const default_config: Record<string, string> = {
+    'CSG13': 'CSG13',
+    'DLT/645-2007': 'DLT645',
+    'CSG16': 'CSG16',
+    'moudle': 'MOUDLE',
+    'MS': 'TASK_MS'
+}
+
 const ConfigPage: React.FC = () => {
     const { isLoading: wasmLoading, updateProtocolConfig, getAvailableProtocols, resetProtocolConfig } = useWasm()
     const [protocolConfigs, setProtocolConfigs] = useState<ProtocolConfig[]>([])
@@ -200,12 +208,12 @@ const ConfigPage: React.FC = () => {
     const getProtocolName = (type: string): string => {
         const names: Record<string, string> = {
             'CSG13': 'CSG13 协议',
-            'DLT645': 'DLT645 协议',
+            'DLT/645-2007': 'DLT645 协议',
             'CSG16': 'CSG16 协议',
-            'MOUDLE': 'MOUDLE 协议',
-            'TASK_MS': 'TASK_MS 协议'
+            'moudle': 'MOUDLE 协议',
+            'MS': 'TASK_MS 协议'
         }
-        return names[type] || type
+        return names[type] || `${type} 协议`
     }
 
     // 显示重置确认对话框
@@ -247,28 +255,47 @@ const ConfigPage: React.FC = () => {
     }
 
     // 导出协议配置
-    const handleExportConfig = (config: ProtocolConfig) => {
-        if (config.isDefault || !config.content) {
-            toast.error('默认配置无法导出，请先上传自定义配置')
-            return
-        }
-
+    const handleExportConfig = async (config: ProtocolConfig) => {
         try {
-            const blob = new Blob([config.content], { type: 'application/xml' })
-            const url = URL.createObjectURL(blob)
+            if (config.isDefault || !config.content) {
+                // 下载默认配置文件
+                const configUrl = `/config/${default_config[config.type]}.xml`
+                const response = await fetch(configUrl)
 
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${config.type}.xml`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
+                if (!response.ok) {
+                    throw new Error(`无法获取默认配置文件: ${response.statusText}`)
+                }
 
-            toast.success('配置导出成功')
+                const blob = await response.blob()
+                const url = URL.createObjectURL(blob)
+
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `${config.type}_default.xml`
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+
+                toast.success(`${getProtocolName(config.type)} 默认配置下载成功`)
+            } else {
+                // 导出自定义配置
+                const blob = new Blob([config.content], { type: 'application/xml' })
+                const url = URL.createObjectURL(blob)
+
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `${config.type}_custom.xml`
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+
+                toast.success(`${getProtocolName(config.type)} 自定义配置导出成功`)
+            }
         } catch (error) {
             console.error('Failed to export config:', error)
-            toast.error('配置导出失败')
+            toast.error(`${getProtocolName(config.type)} 配置导出失败`)
         }
     }
 
@@ -344,7 +371,6 @@ const ConfigPage: React.FC = () => {
                                                     className="btn btn-ghost btn-sm"
                                                     onClick={() => handleExportConfig(config)}
                                                     title="导出配置"
-                                                    disabled={config.isDefault}
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
