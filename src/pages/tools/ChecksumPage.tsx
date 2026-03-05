@@ -439,7 +439,7 @@ export default function ChecksumPage() {
                       <span className="text-sm font-semibold w-20">十六进制</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-[3rem] flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
+                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-12 flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
                           (result.value > 0) ? 'border-success bg-success/10 text-success' :
                             'border-base-300 bg-base-200 text-base-content/50'
                         }`}>
@@ -474,7 +474,7 @@ export default function ChecksumPage() {
                       <span className="text-sm font-semibold w-20">十进制</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-[3rem] flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
+                      <div className={`flex-1 p-3 rounded-lg border-2 font-mono text-lg min-h-12 flex items-center ${result.error ? 'border-error bg-error/10 text-error' :
                           (result.value > 0) ? 'border-success bg-success/10 text-success' :
                             'border-base-300 bg-base-200 text-base-content/50'
                         }`}>

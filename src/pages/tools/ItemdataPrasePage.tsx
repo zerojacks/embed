@@ -60,12 +60,10 @@ export default function ItemdataPrasePage() {
         setTableData(treeData)
         toast.success('解析完成')
       } else {
-        toast.error('解析失败')
+        toast.error(analysisResult.error)
         setTableData([])
       }
     } catch (error) {
-      console.error('解析错误:', error)
-      toast.error('解析过程中发生错误')
       setResult(null)
       setTableData([])
     } finally {

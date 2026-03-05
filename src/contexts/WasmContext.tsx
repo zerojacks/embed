@@ -90,7 +90,8 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
                 protocol: parsedResult.protocol || 'Unknown',
                 region: parsedResult.region || region,
                 data: parsedResult.data || [],
-                success: true
+                success: true,
+                error: "解析成功"
             }
         } catch (err) {
             console.error('Frame analysis error:', err)
@@ -99,6 +100,7 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
                 region: region,
                 data: [],
                 success: false,
+                error: err instanceof Error ? err.message : '分析失败'
             }
         }
     }
@@ -162,16 +164,17 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
                 protocol: parsedResult.protocol || protocol,
                 region: parsedResult.region || region,
                 data: parsedResult.data || [{ item: item, value: data }],
-                success: true
+                success: true,
+                error: "解析成功"
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '数据项解析失败'
-            toast.error(errorMessage)
+            console.log(error)
             return {
                 protocol: protocol,
                 region: region,
                 data: [],
-                success: false
+                success: false,
+                error: error as string
             }
         }
     }

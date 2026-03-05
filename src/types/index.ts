@@ -6,6 +6,7 @@ export interface AnalysisResult {
   region: string
   data: any[]
   success: boolean
+  error: string
 }
 
 export interface ConfigItem {

@@ -301,7 +301,7 @@ export default function MeasurementPointsPage() {
                                         <label className="label">
                                             <span className="label-text font-semibold">转换结果</span>
                                         </label>
-                                        <div className="p-3 rounded-lg border-2 border-base-300 bg-base-200 text-base-content/50 font-mono text-sm min-h-[3rem] flex items-center">
+                                        <div className="p-3 rounded-lg border-2 border-base-300 bg-base-200 text-base-content/50 font-mono text-sm min-h-12 flex items-center">
                                             转换结果将显示在这里
                                         </div>
                                     </div>
