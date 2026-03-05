@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { X, FileText, Database, Clock, Settings } from 'lucide-react';
+import { X, FileText, Database, Clock, Settings, Copy } from 'lucide-react';
 import type { Task } from '@/types/task';
 import InfoItem from './InfoItem';
 
@@ -113,7 +113,7 @@ const TaskPreview: React.FC<TaskPreviewProps> = ({
 
         {/* 内容区域 */}
         <div className="overflow-y-auto max-h-[calc(95vh-140px)] p-6 space-y-6">
-          
+
           {/* 配置参数区域 */}
           <div className="card bg-base-100 shadow-sm border border-base-300">
             <div className="card-body">
@@ -170,9 +170,9 @@ const TaskPreview: React.FC<TaskPreviewProps> = ({
                   originalValue={task.extractionRatioOriginal}
                   highlight
                 />
-                <InfoItem 
-                  label="执行次数" 
-                  value={task.executionCount} 
+                <InfoItem
+                  label="执行次数"
+                  value={task.executionCount}
                   highlight
                 />
               </div>
@@ -283,10 +283,37 @@ const TaskPreview: React.FC<TaskPreviewProps> = ({
           {/* 任务参数区域 */}
           <div className="card bg-base-100 shadow-sm border border-base-300">
             <div className="card-body">
-              <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-5 h-5 text-success" />
-                <h2 className="card-title text-lg">任务参数</h2>
-                <div className="badge badge-success">16进制</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-success" />
+                  <h2 className="card-title text-lg">任务参数</h2>
+                  <div className="badge badge-success">16进制</div>
+                </div>
+                {task.taskParam && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(task.taskParam);
+                        // 可以添加一个toast提示，这里先用简单的提示
+                        const button = document.activeElement as HTMLButtonElement;
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                        button.classList.add('btn-success');
+                        setTimeout(() => {
+                          button.innerHTML = originalText;
+                          button.classList.remove('btn-success');
+                        }, 1000);
+                      } catch (err) {
+                        console.error('复制失败:', err);
+                      }
+                    }}
+                    className="btn btn-sm btn-outline btn-success"
+                    title="复制任务参数"
+                  >
+                    <Copy className="w-4 h-4" />
+                    复制
+                  </button>
+                )}
               </div>
               <div className="bg-base-200 rounded-lg p-4">
                 <div className="font-mono text-sm break-all leading-relaxed">
@@ -297,7 +324,7 @@ const TaskPreview: React.FC<TaskPreviewProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* 模态框背景 */}
       <form method="dialog" className="modal-backdrop">
         <button onClick={handleClose}>close</button>
