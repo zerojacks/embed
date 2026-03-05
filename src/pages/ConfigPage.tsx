@@ -407,9 +407,9 @@ const ConfigPage: React.FC = () => {
                         <h2 className="card-title">已配置的协议</h2>
                         {/* DaisyUI 搜索框 */}
                         <label className="input input-bordered flex items-center gap-2 w-80">
-                            <svg 
-                                className="h-4 w-4 opacity-70" 
-                                xmlns="http://www.w3.org/2000/svg" 
+                            <svg
+                                className="h-4 w-4 opacity-70"
+                                xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 24 24"
                             >
                                 <g
@@ -423,9 +423,9 @@ const ConfigPage: React.FC = () => {
                                     <path d="m21 21-4.3-4.3"></path>
                                 </g>
                             </svg>
-                            <input 
-                                type="search" 
-                                className="grow" 
+                            <input
+                                type="search"
+                                className="grow"
                                 placeholder="搜索配置项..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
