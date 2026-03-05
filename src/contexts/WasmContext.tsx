@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { AnalysisResult, ProtocolType, ProcessFrameResponse } from '../types'
+import type { AnalysisResult, ProtocolType, ProcessFrameResponse, ItemListResponse } from '../types'
 import { toast } from 'react-hot-toast'
 import { wasmManager } from '../utils/wasmManager'
 import { FrameAnalyzer } from '../../pkg-web/embed_core'
@@ -18,6 +18,7 @@ interface WasmContextType {
     resetProtocolConfig: (protocol: ProtocolType) => Promise<void>
     praseItemData(item: string, data: string, protocol: ProtocolType, region: string): Promise<AnalysisResult>
     DaPointExchange(data: string, type: "da_to_point" | "point_to_da", contions: boolean): Promise<string>
+    getAllConfigItems(): Promise<string>
 }
 
 const WasmContext = createContext<WasmContextType | null>(null)
@@ -193,6 +194,21 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
             return ""
         }
     }
+
+    const getAllConfigItems = async () : Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.get_all_config_item_lists();
+            return result
+        } catch (error) {
+            console.error(`获取配置列表失败${error}`)
+            return ""
+        }
+    }
+
+
     const contextValue: WasmContextType = {
         analyzer,
         isLoading,
@@ -205,7 +221,8 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         updateProtocolConfig,
         resetProtocolConfig,
         praseItemData,
-        DaPointExchange
+        DaPointExchange,
+        getAllConfigItems
     }
 
     return (

@@ -1,6 +1,7 @@
 //! Lightweight shared crate for basefunc + config usable by both tauri and wasm
 
 use std::collections::HashMap;
+use futures::future::join_all;
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
@@ -13,7 +14,7 @@ pub use basefunc::frame_csg::FrameCsg;
 pub use basefunc::frame_fun::FrameFun;
 pub use basefunc::protocol::FrameAnalisyic;
 pub use config::oadmapconfig::TaskOadConfigManager;
-pub use config::xmlconfig::{ProtocolConfigManager, QframeConfig, XmlElement};
+pub use config::xmlconfig::{ItemConfigList, ProtocolConfigManager, QframeConfig, XmlElement};
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
@@ -383,6 +384,46 @@ impl FrameAnalyzer {
         }
 
         Ok(all_results.join(","))
+    }
+
+    #[wasm_bindgen]
+    pub async fn get_all_config_item_lists(&self) -> String {
+        let protocols = vec!["CSG13", "CSG16", "DLT/645-2007"];
+        
+        // 创建异步任务
+        let futures: Vec<_> = protocols
+            .into_iter()
+            .map(|protocol| async move {
+                ProtocolConfigManager::get_config_all_itme(&protocol)
+                    .await
+                    .map_err(|e| format!("Failed to get {} config: {}", protocol, e))
+            })
+            .collect();
+
+        // 并发等待所有任务完成
+        let results = join_all(futures).await;
+        
+        let mut all_items = Vec::new();
+        for result in results {
+            match result {
+                Ok(mut items) => all_items.append(&mut items),
+                Err(e) => {
+                    let error_result = serde_json::json!({
+                        "success": false,
+                        "error": e,
+                        "data": null
+                    });
+                    return error_result.to_string();
+                }
+            }
+        }
+
+        let success_result = serde_json::json!({
+            "success": true,
+            "error": null,
+            "data": all_items
+        });
+        success_result.to_string()
     }
 }
 

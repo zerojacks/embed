@@ -5,10 +5,13 @@ import {
     Settings,
     Download,
     RotateCcw,
-    Upload
+    Upload,
+    Search,
+    X
 } from 'lucide-react'
 import { useWasm } from '../contexts/WasmContext'
-import type { ProtocolType } from '../types'
+import type { ProtocolType, ItemConfigList, ItemListResponse } from '../types'
+import VirtualConfigItemList from '../components/VirtualConfigItemList'
 
 interface ProtocolConfig {
     type: ProtocolType
@@ -29,13 +32,20 @@ const default_config: Record<string, string> = {
 }
 
 const ConfigPage: React.FC = () => {
-    const { isLoading: wasmLoading, updateProtocolConfig, getAvailableProtocols, resetProtocolConfig } = useWasm()
+    const { isLoading: wasmLoading, updateProtocolConfig, getAvailableProtocols, resetProtocolConfig, getAllConfigItems } = useWasm()
     const [protocolConfigs, setProtocolConfigs] = useState<ProtocolConfig[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [initialized, setInitialized] = useState(false)
     const [showResetModal, setShowResetModal] = useState(false)
     const [resetProtocolType, setResetProtocolType] = useState<string>('')
     const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+
+    // 搜索相关状态
+    const [searchQuery, setSearchQuery] = useState<string>('')
+    const [showSearchModal, setShowSearchModal] = useState(false)
+    const [configItems, setConfigItems] = useState<ItemConfigList[]>([])
+    const [filteredItems, setFilteredItems] = useState<ItemConfigList[]>([])
+    const [searchLoading, setSearchLoading] = useState(false)
 
     // 处理文件选择
     const handleFileSelect = async (protocolType: string, file: File) => {
@@ -204,7 +214,87 @@ const ConfigPage: React.FC = () => {
         }
     }
 
-    // 获取协议显示名称
+    // 获取配置项数据
+    const fetchConfigItems = async () => {
+        setSearchLoading(true)
+        try {
+            const result = await getAllConfigItems()
+            if (result) {
+                // 假设返回的是 JSON 字符串，需要解析
+                const response: ItemListResponse = JSON.parse(result)
+                if (response.success && response.data) {
+                    setConfigItems(response.data)
+                    setFilteredItems(response.data)
+                } else {
+                    toast.error('获取配置项失败: ' + (response.error || '未知错误'))
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch config items:', error)
+            toast.error('获取配置项失败')
+        } finally {
+            setSearchLoading(false)
+        }
+    }
+
+    // 搜索过滤函数
+    const handleSearch = useCallback((query: string) => {
+        setSearchQuery(query)
+        if (!query.trim()) {
+            setFilteredItems(configItems)
+            return
+        }
+
+        const filtered = configItems.filter(item => {
+            const searchTerm = query.toLowerCase()
+            return (
+                item.item?.toLowerCase().includes(searchTerm) ||
+                item.name?.toLowerCase().includes(searchTerm) ||
+                item.protocol?.toLowerCase().includes(searchTerm) ||
+                item.region?.toLowerCase().includes(searchTerm) ||
+                item.dir?.toLowerCase().includes(searchTerm)
+            )
+        })
+        setFilteredItems(filtered)
+    }, [configItems])
+
+    // 打开搜索模态框
+    const openSearchModal = () => {
+        setShowSearchModal(true)
+        if (configItems.length === 0) {
+            fetchConfigItems()
+        }
+    }
+
+    // 关闭搜索模态框
+    const closeSearchModal = () => {
+        setShowSearchModal(false)
+        setSearchQuery('')
+        setFilteredItems(configItems)
+    }
+
+    // 处理快捷键
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Ctrl+F (Windows/Linux) 或 Cmd+F (Mac) 打开搜索
+            if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+                event.preventDefault() // 阻止浏览器默认的查找功能
+                openSearchModal()
+            }
+            // ESC 键关闭搜索模态框
+            if (event.key === 'Escape' && showSearchModal) {
+                closeSearchModal()
+            }
+        }
+
+        // 添加事件监听器
+        document.addEventListener('keydown', handleKeyDown)
+
+        // 清理事件监听器
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [showSearchModal]) // 依赖 showSearchModal 状态
     const getProtocolName = (type: string): string => {
         const names: Record<string, string> = {
             'CSG13': 'CSG13 协议',
@@ -313,7 +403,38 @@ const ConfigPage: React.FC = () => {
             {/* 已上传的配置列表 */}
             <div className="card bg-base-100 shadow-xl flex-1">
                 <div className="card-body">
-                    <h2 className="card-title">已配置的协议</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="card-title">已配置的协议</h2>
+                        {/* DaisyUI 搜索框 */}
+                        <label className="input input-bordered flex items-center gap-2 w-80">
+                            <svg 
+                                className="h-4 w-4 opacity-70" 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                viewBox="0 0 24 24"
+                            >
+                                <g
+                                    strokeLinejoin="round"
+                                    strokeLinecap="round"
+                                    strokeWidth="2"
+                                    fill="none"
+                                    stroke="currentColor"
+                                >
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.3-4.3"></path>
+                                </g>
+                            </svg>
+                            <input 
+                                type="search" 
+                                className="grow" 
+                                placeholder="搜索配置项..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                onFocus={openSearchModal}
+                            />
+                            <kbd className="kbd kbd-sm">Ctrl</kbd>
+                            <kbd className="kbd kbd-sm">F</kbd>
+                        </label>
+                    </div>
 
                     {protocolConfigs.length === 0 ? (
                         <div className="flex items-center justify-center h-32 text-base-content/60">
@@ -449,6 +570,68 @@ const ConfigPage: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+            {/* 搜索配置项模态框 */}
+            {showSearchModal && (
+                <div className="modal modal-open">
+                    <div className="modal-box max-w-4xl w-full max-h-[90vh]">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-lg">搜索配置项</h3>
+                            <button
+                                className="btn btn-sm btn-circle btn-ghost"
+                                onClick={closeSearchModal}
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* 搜索输入框 */}
+                        <div className="form-control mb-4">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="搜索配置项 (支持搜索数据项ID、名称、协议、省份)"
+                                    className="input input-bordered w-full pl-10"
+                                    value={searchQuery}
+                                    onChange={(e) => handleSearch(e.target.value)}
+                                />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-base-content/50" />
+                            </div>
+                        </div>
+
+                        {/* 搜索结果统计 */}
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm text-base-content/70">
+                                {searchQuery ? `找到 ${filteredItems.length} 个匹配项` : `共 ${configItems.length} 个配置项`}
+                            </span>
+                            {searchLoading && (
+                                <div className="flex items-center gap-2">
+                                    <div className="loading loading-spinner loading-sm"></div>
+                                    <span className="text-sm">加载中...</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 搜索结果列表 */}
+                        <div className="h-96">
+                            {searchLoading ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="loading loading-spinner loading-lg"></div>
+                                    <span className="ml-2">正在获取配置项...</span>
+                                </div>
+                            ) : (
+                                <VirtualConfigItemList
+                                    items={filteredItems}
+                                    height={384} // 24rem = 384px
+                                    itemHeight={48} // 匹配新的紧凑布局高度
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <form method="dialog" className="modal-backdrop">
+                        <button onClick={closeSearchModal}>close</button>
+                    </form>
                 </div>
             )}
         </div>

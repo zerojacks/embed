@@ -32,7 +32,6 @@ export default function AnalysisPage() {
 
   const { splitSize, setSplitSize } = useSplitSizeStore()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const [selectedRegion] = useState('南网')
 
   const {
     analyzer,
@@ -62,7 +61,7 @@ export default function AnalysisPage() {
 
   const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
-    handleParse(newValue)
+    handleParse(newValue, region)
   }
 
   useEffect(() => {
@@ -135,7 +134,7 @@ export default function AnalysisPage() {
 
       try {
         if (region === "") {
-          region = selectedRegion || "南网"
+          region = "南网"
           setRegion(region)
         }
 
@@ -178,6 +177,7 @@ export default function AnalysisPage() {
 
   const handle_region_change = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newRegion = e.target.value
+    console.log(`region ${region}, newRegion ${newRegion}`)
     setRegion(newRegion)
     if (frame) handleParse(frame, newRegion)
   }

@@ -13,10 +13,14 @@ export const frameanalyzer_reset_protocol_config: (a: number, b: number, c: numb
 export const frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: number, e: number) => [number, number];
 export const frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
 export const frameanalyzer_da_and_measure_point_exchange: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
-export const __wbindgen_free: (a: number, b: number, c: number) => void;
+export const frameanalyzer_get_all_config_item_lists: (a: number) => any;
+export const wasm_bindgen__closure__destroy__h5178a76e6e8514ea: (a: number, b: number) => void;
+export const wasm_bindgen__convert__closures_____invoke__h5469f54423cce40c: (a: number, b: number, c: any, d: any) => void;
+export const wasm_bindgen__convert__closures_____invoke__h6b3912d1afed4789: (a: number, b: number, c: any) => void;
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_externrefs: WebAssembly.Table;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 export const __externref_table_dealloc: (a: number) => void;

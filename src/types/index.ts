@@ -39,3 +39,17 @@ export interface ProcessFrameResponse {
 export interface AvailableProtocolsResponse {
   protocols: string[]
 }
+
+export interface ItemConfigList {
+  item: string,
+  name?: string,
+  protocol?: string,
+  region?: string,
+  dir?: string,
+}
+
+export interface ItemListResponse {
+  success: boolean
+  error?: string
+  data?: ItemConfigList[]
+}

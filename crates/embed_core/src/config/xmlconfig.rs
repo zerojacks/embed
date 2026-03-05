@@ -99,6 +99,7 @@ impl XmlTree {
     ) -> Option<&XmlNode> {
         // 直接从索引中查找
         if let Some(node_indices) = self.id_index.get(id) {
+            info!("Found {:?} nodes with id: {}", node_indices, id);
             for &index in node_indices {
                 let node = &self.nodes[index];
                 if self.matches_criteria(
@@ -152,7 +153,7 @@ impl XmlTree {
                     .any(|s| s.eq_ignore_ascii_case(protocol))
             }
         });
-
+        info!("node_region {:?} region {:?} node_protocol {:?} protocol {:?}", node_region, region, node_protocol, protocol);
         // 检查区域匹配
         let region_match = node_region.map_or(false, |r| {
             if region.contains(',') {
@@ -162,7 +163,6 @@ impl XmlTree {
                 // 否则按照原来的逻辑进行分割匹配
                 r.split(',').map(|s| s.trim()).any(|s| {
                     s.eq_ignore_ascii_case(region)
-                        || (region != "南网" && s.eq_ignore_ascii_case("南网"))
                 })
             }
         });
@@ -589,6 +589,7 @@ impl QframeConfig {
         {
             let cache = self.config_cache.read().unwrap();
             if let Some(cached_result) = cache.get(&cache_key) {
+                info!("get config from cache");
                 return cached_result.clone();
             }
         }
@@ -596,12 +597,14 @@ impl QframeConfig {
         let config = self.config.read().unwrap();
         if let Some(tree) = config.as_ref() {
             if let Some(node) = tree.find_by_id(item_id, protocol, region, dir) {
+                info!("find item from {:?}", region);
                 let result = Some(self.node_to_element(tree, node));
                 let mut cache = self.config_cache.write().unwrap();
                 cache.insert(cache_key, result.clone());
                 return result;
             }
             if let Some(node) = tree.find_by_id(item_id, protocol, "南网", dir) {
+                info!("use 南网 get item");
                 let result = Some(self.node_to_element(tree, node));
                 let mut cache = self.config_cache.write().unwrap();
                 cache.insert(cache_key, result.clone());
@@ -1155,6 +1158,49 @@ impl ProtocolConfigManager {
                     .load_from_str(xml)
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
                 Ok(())
+            }
+            _ => Err(format!("Unsupported protocol: {}", protocol).into()),
+        }
+    }
+
+    pub async fn get_config_all_itme(protocol: &str) -> Result<Vec<ItemConfigList>, Box<dyn std::error::Error>> {
+        let find_protocol = protocol.to_uppercase();
+            
+        match find_protocol.as_str() {
+            protocol if protocol.contains("CSG13") => {
+                let config = GLOBAL_CSG13
+                    .as_ref()
+                    .map_err(|e| format!("CSG13 global config initialization failed: {}", e))?;
+                let items = config.get_all_item().await;
+                Ok(items)
+            }
+            protocol if protocol.contains("DLT/645") => {
+                let config = GLOBAL_645
+                    .as_ref()
+                    .map_err(|e| format!("DLT/645 global config initialization failed: {}", e))?;
+                let items = config.get_all_item().await;
+                Ok(items)
+            }
+            protocol if protocol.contains("CSG16") => {
+                let config = GLOBAL_CSG16
+                    .as_ref()
+                    .map_err(|e| format!("CSG16 global config initialization failed: {}", e))?;
+                let items = config.get_all_item().await;
+                Ok(items)
+            }
+            protocol if protocol.contains("MODULE") => {
+                let config = GLOBAL_Moudle
+                    .as_ref()
+                    .map_err(|e| format!("MODULE global config initialization failed: {}", e))?;
+                let items = config.get_all_item().await;
+                Ok(items)
+            }
+            protocol if protocol.contains("MS") => {
+                let config = GLOBAL_MS
+                    .as_ref()
+                    .map_err(|e| format!("MS global config initialization failed: {}", e))?;
+                let items = config.get_all_item().await;
+                Ok(items)
             }
             _ => Err(format!("Unsupported protocol: {}", protocol).into()),
         }

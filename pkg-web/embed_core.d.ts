@@ -9,6 +9,7 @@ export class FrameAnalyzer {
      */
     bytes_to_hex(data: Uint8Array): string;
     da_and_measure_point_exchange(input: string, convert_type: string, continuous: boolean): string;
+    get_all_config_item_lists(): Promise<string>;
     /**
      * Get available protocols
      */
@@ -48,10 +49,14 @@ export interface InitOutput {
     readonly frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
     readonly frameanalyzer_da_and_measure_point_exchange: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
-    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly frameanalyzer_get_all_config_item_lists: (a: number) => any;
+    readonly wasm_bindgen__closure__destroy__h5178a76e6e8514ea: (a: number, b: number) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h5469f54423cce40c: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h6b3912d1afed4789: (a: number, b: number, c: any) => void;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __externref_table_dealloc: (a: number) => void;
