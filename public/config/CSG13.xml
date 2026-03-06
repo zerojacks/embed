@@ -68241,6 +68241,17 @@
 			<type>NORMAL</type>
 		</splitByLength>
     </dataItem>
+	<dataItem id="E3010006" protocol="csg13" region="南网">
+		<name>待升级电表地址列表</name>
+		<length>256</length>
+		<splitbit>
+			<bitpattern type="index" offset="1">
+				<name>测量点{index}</name>
+				<value key="1">待升级</value>
+				<value key="0">无需升级</value>
+        	</bitpattern>
+		</splitbit>
+	</dataItem>
 	<template id="UNRECEIVEIDLIST" protocol="csg13" region="南网">
 		<name>第%d组未成功接收的段号</name>
 		<length>2</length>

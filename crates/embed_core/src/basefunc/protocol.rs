@@ -518,6 +518,94 @@ impl FrameAnalisyic {
         (value_name, sub_item_result, item_length, color)
     }
 
+    /// 智能检测占位符模式
+    /// 支持多种占位符格式：{index}, {num}, {id}, {n}, 等
+    pub fn detect_placeholder_pattern(pattern: &str) -> Vec<String> {
+        let re = Regex::new(r"\{([^}]+)\}").unwrap();
+        re.captures_iter(pattern)
+            .map(|cap| cap[1].to_string())
+            .collect()
+    }
+
+    /// 智能替换占位符
+    /// 根据检测到的占位符类型进行相应的替换
+    pub fn replace_placeholders(
+        pattern: &str,
+        placeholders: &[String],
+        index_value: usize,
+    ) -> String {
+        let mut result = pattern.to_string();
+
+        for placeholder in placeholders {
+            let placeholder_full = format!("{{{}}}", placeholder);
+
+            // 根据占位符名称决定替换值
+            let replacement = match placeholder.to_lowercase().as_str() {
+                "index" | "idx" | "i" => index_value.to_string(),
+                "num" | "number" | "n" => index_value.to_string(),
+                "id" => index_value.to_string(),
+                "count" | "cnt" | "c" => index_value.to_string(),
+                "pos" | "position" | "p" => index_value.to_string(),
+                "seq" | "sequence" | "s" => index_value.to_string(),
+                // 如果是数字占位符，可以进行数学运算
+                _ if placeholder.contains('+') => {
+                    Self::evaluate_placeholder_expression(placeholder, index_value)
+                }
+                _ if placeholder.contains('-') => {
+                    Self::evaluate_placeholder_expression(placeholder, index_value)
+                }
+                _ if placeholder.contains('*') => {
+                    Self::evaluate_placeholder_expression(placeholder, index_value)
+                }
+                _ if placeholder.contains('/') => {
+                    Self::evaluate_placeholder_expression(placeholder, index_value)
+                }
+                // 默认情况下，将占位符替换为索引值
+                _ => index_value.to_string(),
+            };
+
+            result = result.replace(&placeholder_full, &replacement);
+        }
+
+        result
+    }
+
+    /// 计算占位符表达式
+    /// 支持简单的数学运算，如 {index+1}, {n-1}, {i*2} 等
+    fn evaluate_placeholder_expression(expression: &str, index_value: usize) -> String {
+        // 简单的表达式解析器
+        if let Some(pos) = expression.find('+') {
+            let (_left, right) = expression.split_at(pos);
+            let right = &right[1..]; // 跳过 '+' 符号
+            if let Ok(offset) = right.trim().parse::<usize>() {
+                return (index_value + offset).to_string();
+            }
+        } else if let Some(pos) = expression.find('-') {
+            let (_left, right) = expression.split_at(pos);
+            let right = &right[1..]; // 跳过 '-' 符号
+            if let Ok(offset) = right.trim().parse::<usize>() {
+                return index_value.saturating_sub(offset).to_string();
+            }
+        } else if let Some(pos) = expression.find('*') {
+            let (_left, right) = expression.split_at(pos);
+            let right = &right[1..]; // 跳过 '*' 符号
+            if let Ok(multiplier) = right.trim().parse::<usize>() {
+                return (index_value * multiplier).to_string();
+            }
+        } else if let Some(pos) = expression.find('/') {
+            let (_left, right) = expression.split_at(pos);
+            let right = &right[1..]; // 跳过 '/' 符号
+            if let Ok(divisor) = right.trim().parse::<usize>() {
+                if divisor != 0 {
+                    return (index_value / divisor).to_string();
+                }
+            }
+        }
+
+        // 如果解析失败，返回原始索引值
+        index_value.to_string()
+    }
+
     pub fn find_value_from_elements(
         value_elements: &Vec<XmlElement>,
         search_value: &str,
@@ -725,62 +813,153 @@ impl FrameAnalisyic {
     ) -> (Vec<Value>, usize) {
         let mut sub_item_result: Vec<Value> = Vec::new();
         let pos = data_segment.len();
+        info!("splitbit_elem {:?}", splitbit_elem);
 
         let all_bits = splitbit_elem.get_items("bit");
-        for bit_elem in all_bits.iter() {
-            let bit_id_attr = bit_elem.get_attribute("id").unwrap();
-            let bit_name_elem = bit_elem.get_child_text("name");
+        if !all_bits.is_empty() {
+            for bit_elem in all_bits.iter() {
+                let bit_id_attr = bit_elem.get_attribute("id").unwrap();
+                let bit_name_elem = bit_elem.get_child_text("name");
 
-            let (start_bit, end_bit) = if bit_id_attr.contains('-') {
-                let parts: Vec<&str> = bit_id_attr.split('-').collect();
-                (
-                    parts[0].parse::<usize>().unwrap(),
-                    parts[1].parse::<usize>().unwrap(),
-                )
-            } else {
-                let bit = bit_id_attr.parse::<usize>().unwrap();
-                (bit, bit)
-            };
+                let (start_bit, end_bit) = if bit_id_attr.contains('-') {
+                    let parts: Vec<&str> = bit_id_attr.split('-').collect();
+                    (
+                        parts[0].parse::<usize>().unwrap(),
+                        parts[1].parse::<usize>().unwrap(),
+                    )
+                } else {
+                    let bit = bit_id_attr.parse::<usize>().unwrap();
+                    (bit, bit)
+                };
 
-            let start_pos = start_bit / 8;
-            let end_pos = end_bit / 8 + 1;
-            let check_start_bit = start_bit % 8;
-            let check_end_bit = end_bit % 8;
-            let bit_value = FrameFun::extract_bits(
-                check_start_bit,
-                check_end_bit,
-                FrameFun::hex_array_to_int(&data_segment[start_pos..end_pos], need_delete),
-            );
-            let value_elements = bit_elem.get_items("value");
-            let (value_name, element) = Self::find_value_from_elements(&value_elements, &bit_value);
+                let start_pos = start_bit / 8;
+                let end_pos = end_bit / 8 + 1;
+                let check_start_bit = start_bit % 8;
+                let check_end_bit = end_bit % 8;
+                let bit_value = FrameFun::extract_bits(
+                    check_start_bit,
+                    check_end_bit,
+                    FrameFun::hex_array_to_int(&data_segment[start_pos..end_pos], need_delete),
+                );
+                let value_elements = bit_elem.get_items("value");
+                let (value_name, element) =
+                    Self::find_value_from_elements(&value_elements, &bit_value);
 
-            let bit_id_attr = format!("bit{}", bit_id_attr);
-            let name_str = if let Some(name_elem) = bit_name_elem {
-                name_elem
-            } else {
-                bit_id_attr.clone()
-            };
-            let coclor = if element.is_some() {
-                element.as_ref().unwrap().get_attribute("color").cloned()
-            } else {
-                None
-            };
-            let description: String;
-            if value_name.is_none() {
-                description = format!("[{}]: {}", name_str, bit_value);
-            } else {
-                description = format!("[{}]: {}-{}", name_str, bit_value, value_name.unwrap());
+                let bit_id_attr = format!("bit{}", bit_id_attr);
+                let name_str = if let Some(name_elem) = bit_name_elem {
+                    name_elem
+                } else {
+                    bit_id_attr.clone()
+                };
+                let coclor = if element.is_some() {
+                    element.as_ref().unwrap().get_attribute("color").cloned()
+                } else {
+                    None
+                };
+                let description: String;
+                if value_name.is_none() {
+                    description = format!("[{}]: {}", name_str, bit_value);
+                } else {
+                    description = format!("[{}]: {}-{}", name_str, bit_value, value_name.unwrap());
+                }
+
+                FrameFun::add_data(
+                    &mut sub_item_result, // Pass mutable reference here
+                    bit_id_attr,
+                    bit_value,
+                    description,
+                    vec![index + start_pos, index + end_pos],
+                    None,
+                    coclor, // Assuming you want `None` here
+                );
             }
+        } else {
+            let bitpattern = splitbit_elem.get_child("bitpattern").or_else(|| {
+                splitbit_elem
+                    .get_child("splitbit")
+                    .and_then(|splitbit_p| splitbit_p.get_child("bitpattern"))
+            });
+            info!("bitpattern {:?}", bitpattern);
+            if let Some(bitpattern) = bitpattern {
+                let bit_type = bitpattern.get_attribute("type");
+                let offset = bitpattern.get_attribute("offset");
+                info!("bit type {:?} offset {:?}", bit_type, offset);
+                if let Some(bit_type) = bit_type {
+                    if bit_type == "index" {
+                        // 智能解析offset，支持数值和字符串
+                        let offset_value = if let Some(offset_str) = offset.as_deref() {
+                            // 尝试直接解析为数字
+                            offset_str.parse::<usize>().unwrap_or_else(|_| {
+                                // 如果解析失败，可能是其他格式，默认为0
+                                0
+                            })
+                        } else {
+                            0
+                        };
 
-            FrameFun::add_data(
-                &mut sub_item_result, // Pass mutable reference here
-                bit_id_attr,
-                bit_value,
-                description,
-                vec![index + start_pos, index + end_pos],
-                None,
-                coclor, // Assuming you want `None` here
-            );
+                        let pattern_name = bitpattern
+                            .get_child_text("name")
+                            .unwrap_or("bit{index}".to_string());
+                        let value_elements = bitpattern.get_items("value");
+
+                        // 智能检测占位符模式
+                        let placeholder_pattern = Self::detect_placeholder_pattern(&pattern_name);
+
+                        // 遍历数据段的每一位
+                        for byte_index in 0..data_segment.len() {
+                            let byte_value = data_segment[byte_index];
+
+                            // 检查每个字节的8位
+                            for bit_index in 0..8 {
+                                let bit_position = byte_index * 8 + bit_index;
+                                let bit_value = (byte_value >> bit_index) & 1;
+                                let actual_index = bit_position + offset_value;
+
+                                // 智能替换占位符
+                                let name_str = Self::replace_placeholders(
+                                    &pattern_name,
+                                    &placeholder_pattern,
+                                    actual_index,
+                                );
+
+                                // 查找对应的值描述
+                                let bit_value_str = bit_value.to_string();
+                                let (value_name, element) =
+                                    Self::find_value_from_elements(&value_elements, &bit_value_str);
+
+                                let bit_id_attr = format!("bit{}", bit_position);
+                                let color = if element.is_some() {
+                                    element.as_ref().unwrap().get_attribute("color").cloned()
+                                } else {
+                                    None
+                                };
+
+                                let description: String;
+                                if value_name.is_none() {
+                                    description = format!("[{}]: {}", name_str, bit_value);
+                                } else {
+                                    description = format!(
+                                        "[{}]: {}-{}",
+                                        name_str,
+                                        bit_value,
+                                        value_name.unwrap()
+                                    );
+                                }
+
+                                FrameFun::add_data(
+                                    &mut sub_item_result,
+                                    bit_id_attr,
+                                    bit_value_str,
+                                    description,
+                                    vec![index + byte_index, index + byte_index + 1],
+                                    None,
+                                    color,
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         (sub_item_result, pos)
