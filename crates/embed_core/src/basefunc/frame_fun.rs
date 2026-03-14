@@ -970,4 +970,90 @@ impl FrameFun {
         }
         val
     }
+
+    pub fn prase_text_to_point(input: String) -> Result<Vec<u16>, String> {
+        // 处理逗号分隔的多个范围
+        let ranges: Vec<&str> = input.split(',').collect();
+        let mut all_points = Vec::new();
+    
+        for range in ranges {
+            if range.is_empty() {
+                continue;
+            }
+    
+            if range.contains('-') {
+                // 处理范围格式 (如: 1-20)
+                let parts: Vec<&str> = range.split('-').collect();
+                if parts.len() != 2 {
+                    return Err(format!("无效的范围格式: {}", range));
+                }
+    
+                let start = parts[0]
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的起始数字: {}", parts[0]))?;
+                let end = parts[1]
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的结束数字: {}", parts[1]))?;
+    
+                if start > end {
+                    return Err(format!("起始数字必须小于或等于结束数字: {}", range));
+                }
+    
+                all_points.extend(start..=end);
+            } else {
+                // 处理单个数字
+                let point = range
+                    .parse::<u16>()
+                    .map_err(|_| format!("无效的数字: {}", range))?;
+                all_points.push(point);
+            }
+        }
+    
+        if all_points.is_empty() {
+            return Err("请输入有效的测量点".to_string());
+        }
+    
+        // 对点进行排序和去重
+        all_points.sort();
+        all_points.dedup();
+        Ok(all_points)
+    }
+
+    pub fn prase_item_by_input_text(input: String) -> Vec<u32> {
+        let binding = input.replace(' ', "");
+        let hex_values: Vec<&str> = binding.split(',').collect();
+        
+        let item_array: Vec<u32> = hex_values
+            .iter()
+            .filter_map(|x| u32::from_str_radix(x.trim(), 16).ok())
+            .collect();
+        
+        item_array
+    }
+
+    pub fn get_time_bcd_array(timestamp: u32) -> Vec<u8> {
+        use chrono::{Utc, TimeZone, Datelike, Timelike};
+        
+        // Convert timestamp to DateTime
+        let datetime = Utc.timestamp_opt(timestamp as i64, 0).unwrap();
+        let year = datetime.year() as u32;
+        let month = datetime.month() as u8;
+        let day = datetime.day() as u8;
+        let hour = datetime.hour() as u8;
+        let minute = datetime.minute() as u8;
+        let second = datetime.second() as u8;
+        
+        // Create BCD array
+        let bcd_array = vec![
+            Self::binary2bcd((year / 100) as u8),
+            Self::binary2bcd((year % 100) as u8),
+            Self::binary2bcd(month),
+            Self::binary2bcd(day),
+            Self::binary2bcd(hour),
+            Self::binary2bcd(minute),
+            Self::binary2bcd(second)
+        ];
+        
+        bcd_array
+    }
 }

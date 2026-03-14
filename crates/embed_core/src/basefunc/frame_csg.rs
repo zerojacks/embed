@@ -6,6 +6,7 @@ use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement}; // 引入 Fra
 use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, NaiveTime};
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::backtrace::Backtrace;
 use std::collections::HashMap;
@@ -15,6 +16,85 @@ use tracing::info;
 const ITEM_ACK_NAK: u32 = 0xE0000000;
 const MASK_FIR: u8 = 0x40;
 const MASK_FIN: u8 = 0x20;
+
+// Define structures that match TypeScript types
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FrameData {
+    pub point: String,
+    pub item: String,
+    pub data: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CSGParam {
+    pub data: Vec<FrameData>,
+    #[serde(rename = "type")]
+    pub param_type: String, // "read" or "write"
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CSGCurrentDataFrame {
+    pub data: Vec<FrameData>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CSGHistoryDataFrame {
+    pub data: Vec<FrameData>,
+    #[serde(rename = "startTime")]
+    pub start_time: u64, // 改为 u64 以匹配前端的 number 类型
+    #[serde(rename = "endTime")]
+    pub end_time: u64, // 改为 u64 以匹配前端的 number 类型
+    #[serde(rename = "dataDensity")]
+    pub data_density: u8,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CSGAlarmEventFrame {
+    pub data: Vec<FrameData>,
+    #[serde(rename = "startTime")]
+    pub start_time: u64,
+    #[serde(rename = "endTime")]
+    pub end_time: u64,
+    #[serde(rename = "type")]
+    pub ae_type: String, // "alarm" or "event"
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct NormalTaskParam {
+    pub task_id: u32,          // 任务号 0xE0000300+id
+    pub valid_flag: bool,      // 有效标识，false：无效，true-有效
+    pub report_base_time: u64, // 上报基准时间 YYMMDDhhmm (毫秒时间戳)
+    pub report_unit: u8,       // 定时上报周期单位 0-分钟，1-小时，2-日，3-月
+    pub report_cycle: u8,      // 上报周期
+    pub data_struct: u8,       // 数据结构方式：0-自描述格式组织数据 1-按任务定义数据格式
+    pub read_base_time: u64,   // 采样基准时间 YYMMDDhhmm (毫秒时间戳)
+    pub read_unit: u8,         // 定时采样周期单位 0-分钟，1-小时，2-日，3-月
+    pub read_cycle: u8,        // 定时采样周期
+    pub data_rate: u8,         // 数据抽取倍率
+    pub exec_count: u16,       // 执行次数
+    pub points: String,        // 信息点标识
+    pub items: String,         // 数据标识编码
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MeterTaskParam {
+    pub task_id: u32,              // 任务号 0xE0001500+id
+    pub valid_flag: bool,          // 有效标识，false：无效，true-有效
+    pub report_base_time: u64,     // 上报基准时间 YYMMDDhhmm (毫秒时间戳)
+    pub report_unit: u8,           // 定时上报周期单位 0-分钟，1-小时，2-日，3-月
+    pub report_cycle: u8,          // 上报周期
+    pub data_struct: u8, // 数据结构方式：0-自描述格式组织数据 1-按任务定义数据格式 3-自定义
+    pub meter_read_base_time: u64, // 表端采样基准时间 YYMMDDhhmm (毫秒时间戳)
+    pub meter_read_unit: u8, // 表端定时采样周期单位 0-分钟，1-小时，2-日，3-月
+    pub meter_read_cycle: u8, // 表端定时采样周期
+    pub data_rate: u8,   // 数据抽取倍率
+    pub read_base_time: u64, // 终端采样基准时间 YYMMDDhhmm (毫秒时间戳)
+    pub read_unit: u8,   // 终端定时查询周期单位 0-分钟，1-小时，2-日，3-月
+    pub read_cycle: u8,  // 终端定时查询周期
+    pub exec_count: u16, // 执行次数
+    pub points: String,  // 信息点标识
+    pub items: String,   // 数据标识编码
+}
 
 #[derive(Debug)]
 pub enum FramePos {
@@ -147,17 +227,16 @@ impl FrameCsg {
     pub fn add_point_and_item_to_frame(
         point_array: Vec<u16>,
         item_array: Vec<u32>,
-        frame: Option<Vec<u8>>,
+        frame: &mut Vec<u8>,
     ) -> usize {
-        let mut frame = frame.unwrap_or_else(|| vec![]);
         let mut frame_len = 0;
 
         if point_array[0] == 0xFF && point_array[1] == 0xFF {
             let meter_point = 0xFFFF;
-            frame_len += Self::push_item_into_frame(meter_point, &item_array, &mut frame);
+            frame_len += Self::push_item_into_frame(meter_point, &item_array, frame);
         } else {
             for meter_point in point_array {
-                frame_len += Self::push_item_into_frame(meter_point, &item_array, &mut frame);
+                frame_len += Self::push_item_into_frame(meter_point, &item_array, frame);
             }
         }
 
@@ -200,16 +279,15 @@ impl FrameCsg {
         start_time: Vec<u8>,
         end_time: Vec<u8>,
         datakind: Option<u8>,
-        frame: Option<Vec<u8>>,
+        frame: &mut Vec<u8>,
     ) -> usize {
-        let mut frame = frame.unwrap_or_else(|| vec![]);
         let mut frame_len = 0;
         if point_array[0] == 0xFF && point_array[1] == 0xFF {
             let meter_point = 0xFFFF;
             frame_len += Self::push_item_with_time_into_frame(
                 meter_point,
                 &item_array,
-                &mut frame,
+                frame,
                 &start_time,
                 &end_time,
                 datakind,
@@ -219,7 +297,7 @@ impl FrameCsg {
                 frame_len += Self::push_item_with_time_into_frame(
                     meter_point,
                     &item_array,
-                    &mut frame,
+                    frame,
                     &start_time,
                     &end_time,
                     datakind,
@@ -1075,7 +1153,7 @@ impl FrameCsg {
         let left_length = if with_time { total_len - 6 } else { total_len };
         while total_len > pos {
             if pos + 4 > total_len {
-                info!("ddddd pos + 4:{:?} total_len {:?}", pos + 4,total_len);
+                info!("ddddd pos + 4:{:?} total_len {:?}", pos + 4, total_len);
                 if pos != 0 {
                     return true;
                 }
@@ -1100,13 +1178,15 @@ impl FrameCsg {
                     } else {
                         sub_length_cont.parse::<usize>().unwrap()
                     };
-                    info!("sub_length:{:?} pos{:?} with_time{:?}", sub_length,pos,with_time);
+                    info!(
+                        "sub_length:{:?} pos{:?} with_time{:?}",
+                        sub_length, pos, with_time
+                    );
                     pos += sub_length + 6;
                     pos += 5;
                     if (left_length - 6) % (sub_length + 5) == 0 {
                         return false;
                     }
-                    
                 } else {
                     info!("aaaaa");
                     return true;
@@ -1223,7 +1303,8 @@ impl FrameCsg {
                             if let Some(mut template) = ProtocolConfigManager::get_template_element(
                                 &data_type, protocol, region, dir,
                             ) {
-                                let template_items_cloned: Vec<XmlElement> = template.get_items("splitByLength");
+                                let template_items_cloned: Vec<XmlElement> =
+                                    template.get_items("splitByLength");
                                 return Self::execute_calculation(
                                     &mut template,
                                     data,
@@ -2057,7 +2138,12 @@ impl FrameCsg {
                 if pos + 6 < data_segment.len() {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
@@ -2283,7 +2369,12 @@ impl FrameCsg {
                 if pos + 6 < data_segment.len() {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
@@ -2510,7 +2601,12 @@ impl FrameCsg {
                 if pos + 6 < data_segment.len() {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
@@ -2723,7 +2819,12 @@ impl FrameCsg {
                         if pos + 6 < data_segment.len() {
                             let m_item = &data_segment[pos + 2..pos + 6];
                             let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                                &m_data_item,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
                             pw = Self::guest_is_exit_pw(
                                 length,
                                 pw_data,
@@ -2744,7 +2845,12 @@ impl FrameCsg {
                         if pos + 6 < data_segment.len() {
                             let m_item = &data_segment[pos + 2..pos + 6];
                             let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                                &m_data_item,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
                             pw = Self::guest_is_exit_pw(
                                 length,
                                 pw_data,
@@ -2978,7 +3084,12 @@ impl FrameCsg {
                         if pos + 6 < data_segment.len() {
                             let m_item = &data_segment[pos + 2..pos + 6];
                             let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                                &m_data_item,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
                             pw = Self::guest_is_exit_pw(
                                 length,
                                 pw_data,
@@ -2999,7 +3110,12 @@ impl FrameCsg {
                         if pos + 6 < data_segment.len() {
                             let m_item = &data_segment[pos + 2..pos + 6];
                             let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                            let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                                &m_data_item,
+                                protocol,
+                                region,
+                                Some(dir),
+                            );
                             pw = Self::guest_is_exit_pw(
                                 length,
                                 pw_data,
@@ -3541,7 +3657,12 @@ impl FrameCsg {
                     if length - pos == 16 {
                         let m_item = &data_segment[pos + 2..pos + 6];
                         let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                            &m_data_item,
+                            protocol,
+                            region,
+                            Some(dir),
+                        );
                         pw = Self::guest_is_exit_pw(
                             length,
                             pw_data,
@@ -3591,7 +3712,12 @@ impl FrameCsg {
                     if length - pos == 16 {
                         let m_item = &data_segment[pos + 2..pos + 6];
                         let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                        let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                            &m_data_item,
+                            protocol,
+                            region,
+                            Some(dir),
+                        );
                         pw = Self::guest_is_exit_pw(
                             length,
                             pw_data,
@@ -3983,9 +4109,14 @@ impl FrameCsg {
 
                 pos += sub_length;
                 num += 1;
-                info!("num:{:?} length{:?} pos{:?} item_count * pncount{:?}", num, length, pos, item_count * pncount);
-                if ((length-pos==16) || (length - pos == 22)) && (num == item_count * pncount)
-                {
+                info!(
+                    "num:{:?} length{:?} pos{:?} item_count * pncount{:?}",
+                    num,
+                    length,
+                    pos,
+                    item_count * pncount
+                );
+                if ((length - pos == 16) || (length - pos == 22)) && (num == item_count * pncount) {
                     info!("pw:{:?} pw_data:{:?}", pw, pw_data);
                     pw = Self::guest_is_exit_pw(
                         length,
@@ -4297,7 +4428,12 @@ impl FrameCsg {
                 if length - pos == 16 {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         &pw_data,
@@ -4553,7 +4689,12 @@ impl FrameCsg {
             if length - pos == 16 {
                 let m_item = &data_segment[pos + 2..pos + 6];
                 let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                    &m_data_item,
+                    protocol,
+                    region,
+                    Some(dir),
+                );
                 pw = Self::guest_is_exit_pw(
                     length,
                     pw_data,
@@ -4681,7 +4822,10 @@ impl FrameCsg {
             if let Some(mut data_item_elem) = data_item_elem {
                 if dir == 1 && prm == 0 {
                     let frame_result: Vec<String> = Vec::new();
-                    info!("dir:{:?} data_item_elem{:?} data_segment{:?}", dir,data_item_elem, data_segment);
+                    info!(
+                        "dir:{:?} data_item_elem{:?} data_segment{:?}",
+                        dir, data_item_elem, data_segment
+                    );
                     let sub_length_cont = data_item_elem.get_child_text("length").unwrap();
                     (sub_length, sub_datament) = if sub_length_cont.to_uppercase() == "UNKNOWN" {
                         let sub_length = Self::calculate_item_length(
@@ -4709,7 +4853,10 @@ impl FrameCsg {
                         );
                         (sub_length, new_datament)
                     };
-                    info!("sub_length {:?} new_datament:{:?}", sub_length,sub_datament);
+                    info!(
+                        "sub_length {:?} new_datament:{:?}",
+                        sub_length, sub_datament
+                    );
                     data_item_elem.update_value("length", sub_length.to_string());
                     item_data = FrameAnalisyic::prase_data(
                         &mut data_item_elem,
@@ -4721,8 +4868,7 @@ impl FrameCsg {
                     );
                 } else {
                     let sub_length_cont = data_item_elem.get_child_text("length").unwrap();
-                    (sub_length, sub_datament) = if sub_length_cont.to_uppercase() == "UNKNOWN"
-                    {
+                    (sub_length, sub_datament) = if sub_length_cont.to_uppercase() == "UNKNOWN" {
                         let sub_length = Self::calculate_item_length(
                             &mut data_item_elem,
                             &data_segment[pos + 4..],
@@ -4748,7 +4894,10 @@ impl FrameCsg {
                         );
                         (sub_length, new_datament)
                     };
-                    info!("sub_length {:?} new_datament:{:?}", sub_length,sub_datament);
+                    info!(
+                        "sub_length {:?} new_datament:{:?}",
+                        sub_length, sub_datament
+                    );
                     data_item_elem.update_value("length", sub_length.to_string());
                     item_data = FrameAnalisyic::prase_data(
                         &mut data_item_elem,
@@ -4758,7 +4907,6 @@ impl FrameCsg {
                         index + pos + 4,
                         Some(dir),
                     );
-
                 }
                 let name = data_item_elem.get_child_text("name").unwrap();
                 let dis_data_identifier = format!("数据标识编码：[{}]-{}", data_item, name);
@@ -4799,7 +4947,12 @@ impl FrameCsg {
                 if length - pos == 16 {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
@@ -5004,7 +5157,12 @@ impl FrameCsg {
                 if length - pos == 16 {
                     let m_item = &data_segment[pos + 2..pos + 6];
                     let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                    let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                        &m_data_item,
+                        protocol,
+                        region,
+                        Some(dir),
+                    );
                     pw = Self::guest_is_exit_pw(
                         length,
                         pw_data,
@@ -5240,7 +5398,12 @@ impl FrameCsg {
             if length - pos == 16 {
                 let m_item = &data_segment[pos + 2..pos + 6];
                 let m_data_item = FrameFun::get_data_str_reverser(m_item);
-                let m_data_item_elem = ProtocolConfigManager::get_config_xml(&m_data_item, protocol, region, Some(dir));
+                let m_data_item_elem = ProtocolConfigManager::get_config_xml(
+                    &m_data_item,
+                    protocol,
+                    region,
+                    Some(dir),
+                );
                 pw = Self::guest_is_exit_pw(
                     length,
                     pw_data,
@@ -5293,5 +5456,385 @@ impl FrameCsg {
         );
 
         Ok(())
+    }
+
+    pub fn build_csg_param_frame_with_params(frame_param: CSGParam) -> Vec<u8> {
+        match frame_param.param_type.as_str() {
+            "read" => Self::build_csg_read_frame(frame_param.data),
+            "write" => Self::build_csg_write_param(frame_param.data),
+            _ => vec![], // Default case
+        }
+    }
+
+    fn build_csg_read_frame(frame_param: Vec<FrameData>) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize]; // 预分配足够的空间
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        Self::init_frame(
+            0x4A,
+            0x0A,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        for data in frame_param {
+            let points = match FrameFun::prase_text_to_point(data.point) {
+                Ok(p) => p,
+                Err(_) => continue, // Skip invalid points
+            };
+            let items = FrameFun::prase_item_by_input_text(data.item);
+            Self::add_point_and_item_to_frame(points, items, &mut frame);
+        }
+
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    fn build_csg_write_param(frame_param: Vec<FrameData>) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize]; // 预分配足够的空间
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        Self::init_frame(
+            0x4A,
+            0x04,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        for data in frame_param {
+            let points = match FrameFun::prase_text_to_point(data.point) {
+                Ok(p) => p,
+                Err(_) => continue, // Skip invalid points
+            };
+            let items = FrameFun::prase_item_by_input_text(data.item);
+            Self::add_point_and_item_to_frame(points, items, &mut frame);
+            if data.data.is_none() {
+                continue;
+            }
+            let data = data.data.unwrap();
+            FrameFun::prase_text_to_frame(&data, &mut frame);
+        }
+
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_read_curdata_frame(frame_param: Vec<FrameData>) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize]; // 预分配足够的空间
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        Self::init_frame(
+            0x4A,
+            0x0C,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        for data in frame_param {
+            let points = match FrameFun::prase_text_to_point(data.point) {
+                Ok(p) => p,
+                Err(_) => continue, // Skip invalid points
+            };
+            let items = FrameFun::prase_item_by_input_text(data.item);
+            Self::add_point_and_item_to_frame(points, items, &mut frame);
+        }
+
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_read_hisdata_frame(frame_param: CSGHistoryDataFrame) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize]; // 预分配足够的空间
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        Self::init_frame(
+            0x4A,
+            0x0D,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        // 将 u64 转换为 u32，因为前端传入的是毫秒时间戳，需要转换为秒
+        let start_time = FrameFun::get_time_bcd_array((frame_param.start_time / 1000) as u32);
+        let end_time = FrameFun::get_time_bcd_array((frame_param.end_time / 1000) as u32);
+
+        for data in frame_param.data {
+            let points = match FrameFun::prase_text_to_point(data.point) {
+                Ok(p) => p,
+                Err(_) => continue, // Skip invalid points
+            };
+            let items = FrameFun::prase_item_by_input_text(data.item);
+
+            Self::add_point_and_item_and_time_to_frame(
+                points,
+                items,
+                start_time[..start_time.len() - 1].to_vec(),
+                end_time[..end_time.len() - 1].to_vec(),
+                Some(frame_param.data_density),
+                &mut frame,
+            );
+        }
+
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_read_alarm_event_frame(frame_param: CSGAlarmEventFrame) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize]; // 预分配足够的空间
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+
+        // 根据类型选择不同的AFN
+        let afn = match frame_param.ae_type.as_str() {
+            "alarm" => 0x13, // 告警数据读取
+            "event" => 0x0E, // 事件数据读取
+            _ => 0x0E,       // 默认为告警
+        };
+
+        Self::init_frame(
+            0x4A,
+            afn,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        // 将 u64 转换为 u32，因为前端传入的是毫秒时间戳，需要转换为秒
+        let start_time = FrameFun::get_time_bcd_array((frame_param.start_time / 1000) as u32);
+        let end_time = FrameFun::get_time_bcd_array((frame_param.end_time / 1000) as u32);
+
+        for data in frame_param.data {
+            let points = match FrameFun::prase_text_to_point(data.point) {
+                Ok(p) => p,
+                Err(_) => continue, // Skip invalid points
+            };
+            let items = FrameFun::prase_item_by_input_text(data.item);
+
+            Self::add_point_and_item_and_time_to_frame(
+                points,
+                items,
+                start_time[..start_time.len() - 1].to_vec(),
+                end_time[..end_time.len() - 1].to_vec(),
+                None, // 告警事件不需要数据密度
+                &mut frame,
+            );
+        }
+
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_normal_task_frame(task_param: NormalTaskParam) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize];
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+
+        // 初始化帧头，使用AFN=0x12表示任务数据
+        Self::init_frame(
+            0x4A,
+            0x04,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        // 添加任务号作为DA和DI
+        let task_item = 0xE0000300 + task_param.task_id;
+        let points = vec![0]; // 使用广播点
+        let items = vec![task_item];
+        Self::add_point_and_item_to_frame(points, items, &mut frame);
+
+        // 添加任务参数数据
+        // 有效标识
+        frame.push(if task_param.valid_flag { 1 } else { 0 });
+
+        // 上报基准时间 (转换为BCD格式 YYMMDDhhmm，逆序添加)
+        let report_time_bcd =
+            FrameFun::get_time_bcd_array((task_param.report_base_time / 1000) as u32);
+        let mut report_time_reversed = report_time_bcd[1..6].to_vec(); // 取YYMMDDhhmm部分
+        report_time_reversed.reverse(); // 逆序
+        frame.extend_from_slice(&report_time_reversed);
+
+        // 上报周期单位和周期
+        frame.push(task_param.report_unit);
+        frame.push(task_param.report_cycle);
+
+        // 数据结构方式
+        frame.push(task_param.data_struct);
+
+        // 采样基准时间 (转换为BCD格式 YYMMDDhhmm)
+        // 采样基准时间 (转换为BCD格式 YYMMDDhhmm，逆序添加)
+        let read_time_bcd = FrameFun::get_time_bcd_array((task_param.read_base_time / 1000) as u32);
+        let mut read_time_reversed = read_time_bcd[1..6].to_vec(); // 取YYMMDDhhmm部分
+        read_time_reversed.reverse(); // 逆序
+        frame.extend_from_slice(&read_time_reversed);
+        // 采样周期单位和周期
+        frame.push(task_param.read_unit);
+        frame.push(task_param.read_cycle);
+
+        // 数据抽取倍率
+        frame.push(task_param.data_rate);
+
+        // 执行次数
+        frame.extend_from_slice(&task_param.exec_count.to_le_bytes());
+
+        // 解析信息点标识
+        let points = match FrameFun::prase_text_to_point(task_param.points) {
+            Ok(p) => p,
+            Err(_) => vec![0xFFFF], // 默认使用广播点
+        };
+
+        // 解析数据标识编码
+        let items = FrameFun::prase_item_by_input_text(task_param.items);
+
+        // 添加点数和项数
+        frame.push(points.len() as u8);
+        // 添加信息点标识列表
+        for point in &points {
+            Self::add_point_to_frame(*point, &mut frame);
+        }
+
+        frame.push(items.len() as u8);
+        // 添加数据标识编码列表
+        for item in &items {
+            FrameFun::item_to_di(*item, &mut frame);
+        }
+
+        // 完成帧构建
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_meter_task_frame(task_param: MeterTaskParam) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize];
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+
+        // 初始化帧头，使用AFN=0x04表示写参数，任务号使用0xE0001500+id
+        Self::init_frame(
+            0x4A,
+            0x04,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        // 添加任务号作为DA和DI
+        let task_item = 0xE0001500 + task_param.task_id;
+        let points = vec![0]; // 使用广播点
+        let items = vec![task_item];
+        Self::add_point_and_item_to_frame(points, items, &mut frame);
+
+        // 添加电表任务参数数据
+        // 有效标识
+        frame.push(if task_param.valid_flag { 1 } else { 0 });
+
+        // 上报基准时间 (转换为BCD格式 YYMMDDhhmm，逆序添加)
+        let report_time_bcd =
+            FrameFun::get_time_bcd_array((task_param.report_base_time / 1000) as u32);
+        let mut report_time_reversed = report_time_bcd[1..6].to_vec(); // 取YYMMDDhhmm部分
+        report_time_reversed.reverse(); // 逆序
+        frame.extend_from_slice(&report_time_reversed);
+
+        // 上报周期单位和周期
+        frame.push(task_param.report_unit);
+        frame.push(task_param.report_cycle);
+
+        // 数据结构方式
+        frame.push(task_param.data_struct);
+
+        // 表端采样基准时间 (转换为BCD格式 YYMMDDhhmm，逆序添加)
+        let meter_read_time_bcd =
+            FrameFun::get_time_bcd_array((task_param.meter_read_base_time / 1000) as u32);
+        let mut meter_read_time_reversed = meter_read_time_bcd[1..6].to_vec(); // 取YYMMDDhhmm部分
+        meter_read_time_reversed.reverse(); // 逆序
+        frame.extend_from_slice(&meter_read_time_reversed);
+
+        // 表端采样周期单位和周期
+        frame.push(task_param.meter_read_unit);
+        frame.push(task_param.meter_read_cycle);
+
+        // 数据抽取倍率
+        frame.push(task_param.data_rate);
+
+        // 终端采样基准时间 (转换为BCD格式 YYMMDDhhmm，逆序添加)
+        let read_time_bcd = FrameFun::get_time_bcd_array((task_param.read_base_time / 1000) as u32);
+        let mut read_time_reversed = read_time_bcd[1..6].to_vec(); // 取YYMMDDhhmm部分
+        read_time_reversed.reverse(); // 逆序
+        frame.extend_from_slice(&read_time_reversed);
+
+        // 终端查询周期单位和周期
+        frame.push(task_param.read_unit);
+        frame.push(task_param.read_cycle);
+
+        // 执行次数
+        frame.extend_from_slice(&task_param.exec_count.to_le_bytes());
+
+        // 解析信息点标识
+        let points = match FrameFun::prase_text_to_point(task_param.points) {
+            Ok(p) => p,
+            Err(_) => vec![0xFFFF], // 默认使用广播点
+        };
+
+        // 解析数据标识编码
+        let items = FrameFun::prase_item_by_input_text(task_param.items);
+
+        // 添加点数和项数
+        frame.push(points.len() as u8);
+        // 添加信息点标识列表
+        for point in &points {
+            Self::add_point_to_frame(*point, &mut frame);
+        }
+
+        frame.push(items.len() as u8);
+        // 添加数据标识编码列表
+        for item in &items {
+            FrameFun::item_to_di(*item, &mut frame);
+        }
+
+        // 完成帧构建
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
     }
 }

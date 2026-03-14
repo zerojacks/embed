@@ -4,6 +4,7 @@ import type { AnalysisResult, ProtocolType, ProcessFrameResponse } from '../type
 import { toast } from 'react-hot-toast'
 import { wasmManager } from '../utils/wasmManager'
 import { FrameAnalyzer } from '../../pkg-web/embed_core'
+import type { CSGCurrentDataFrame, CSGHistoryDataFrame, CSGParam, CSGAlarmEventFrame, NormalTaskParam, MeterTaskParam } from '@/types/csgframe'
 
 interface WasmContextType {
     analyzer: FrameAnalyzer | null
@@ -19,6 +20,13 @@ interface WasmContextType {
     praseItemData(item: string, data: string, protocol: ProtocolType, region: string): Promise<AnalysisResult>
     DaPointExchange(data: string, type: "da_to_point" | "point_to_da", contions: boolean): Promise<string>
     getAllConfigItems(): Promise<string>
+    generatorCSGParam(param_data: CSGParam): Promise<string>
+    generatorCSGReadCur(param_data: CSGCurrentDataFrame): Promise<string>
+    generatorCSGHistoryFrame(param_data: CSGHistoryDataFrame): Promise<string>
+    generatorCSGAlarmEventFrame(param_data: CSGAlarmEventFrame): Promise<string>
+    generatorNormalTaskFrame(param_data: NormalTaskParam): Promise<string>
+    generatorMeterTaskFrame(param_data: MeterTaskParam): Promise<string>
+    getItemConfig(item_id: string, protocol: string, region: string): Promise<string>
 }
 
 const WasmContext = createContext<WasmContextType | null>(null)
@@ -180,7 +188,7 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
-    const DaPointExchange = async (data: string, type : "da_to_point" | "point_to_da", contions: boolean): Promise<string> => {
+    const DaPointExchange = async (data: string, type: "da_to_point" | "point_to_da", contions: boolean): Promise<string> => {
         if (!analyzer) {
             throw new Error('WASM analyzer not initialized')
         }
@@ -195,7 +203,7 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
-    const getAllConfigItems = async () : Promise<string> => {
+    const getAllConfigItems = async (): Promise<string> => {
         if (!analyzer) {
             throw new Error('WASM analyzer not initialized')
         }
@@ -208,6 +216,97 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
+    const generatorCSGParam = async (param_data: CSGParam): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_param_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG参数失败${error}`)
+            return ""
+        }
+    }
+
+    const generatorCSGReadCur = async (param_data: CSGCurrentDataFrame): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_read_curdata_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG当前数据失败${error}`)
+            return ""
+        }
+    }
+
+    const generatorCSGHistoryFrame = async (param_data: CSGHistoryDataFrame): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_read_hisdata_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG历史数据失败${error}`)
+            return ""
+        }
+    }
+
+    const generatorCSGAlarmEventFrame = async (param_data: CSGAlarmEventFrame): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_read_alarm_event_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG告警事件数据失败${error}`)
+            return ""
+        }
+    }
+
+    const generatorNormalTaskFrame = async (param_data: NormalTaskParam): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_normal_task_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG普通任务失败${error}`)
+            return ""
+        }
+    }
+
+    const generatorMeterTaskFrame = async (param_data: MeterTaskParam): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_meter_task_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG电表任务失败${error}`)
+            return ""
+        }
+    }
+
+    const getItemConfig = async (item_id: string, protocol: string, region: string): Promise<string> => {
+        if(!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+
+        try {
+            const result = analyzer.get_item_config(item_id, protocol, region);
+            return result
+        } catch(error) {
+            console.error(`获取项配置失败${error}`)
+            return ""
+        }
+    }
 
     const contextValue: WasmContextType = {
         analyzer,
@@ -222,7 +321,14 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         resetProtocolConfig,
         praseItemData,
         DaPointExchange,
-        getAllConfigItems
+        getAllConfigItems,
+        generatorCSGParam,
+        generatorCSGReadCur,
+        generatorCSGHistoryFrame,
+        generatorCSGAlarmEventFrame,
+        generatorNormalTaskFrame,
+        generatorMeterTaskFrame,
+        getItemConfig
     }
 
     return (

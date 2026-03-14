@@ -96,7 +96,7 @@ const tools = [
       </svg>
     ),
     color: 'primary',
-    status: 'coming-soon'
+    status: 'available'
   },
   {
     id: 'statistics',
@@ -116,7 +116,7 @@ export default function ToolsPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="shrink-0 p-6 border-b border-base-300">
+      <div className="shrink-0 p-4 border-b border-base-300">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">工具箱</h1>

@@ -14,6 +14,13 @@ export const frameanalyzer_init_oad_map: (a: number, b: number, c: number, d: nu
 export const frameanalyzer_parse_item_data: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number, number];
 export const frameanalyzer_da_and_measure_point_exchange: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
 export const frameanalyzer_get_all_config_item_lists: (a: number) => any;
+export const frameanalyzer_build_csg_param_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_read_curdata_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_read_hisdata_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_read_alarm_event_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_normal_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_meter_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_get_item_config: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
 export const wasm_bindgen__closure__destroy__h5178a76e6e8514ea: (a: number, b: number) => void;
 export const wasm_bindgen__convert__closures_____invoke__h5469f54423cce40c: (a: number, b: number, c: any, d: any) => void;
 export const wasm_bindgen__convert__closures_____invoke__h6b3912d1afed4789: (a: number, b: number, c: any) => void;

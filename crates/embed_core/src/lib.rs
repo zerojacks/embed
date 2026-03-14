@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use futures::future::join_all;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
@@ -10,7 +11,7 @@ pub mod basefunc;
 pub mod config;
 pub mod logger;
 // Re-export commonly used types for easier access
-pub use basefunc::frame_csg::FrameCsg;
+pub use basefunc::frame_csg::{FrameCsg, FrameData, CSGParam, CSGCurrentDataFrame, CSGHistoryDataFrame, CSGAlarmEventFrame, NormalTaskParam, MeterTaskParam};
 pub use basefunc::frame_fun::FrameFun;
 pub use basefunc::protocol::FrameAnalisyic;
 pub use config::oadmapconfig::TaskOadConfigManager;
@@ -425,6 +426,218 @@ impl FrameAnalyzer {
         });
         success_result.to_string()
     }
+
+    #[wasm_bindgen]
+    pub fn build_csg_param_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 CSGParam 结构体
+        let csg_param: CSGParam = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse CSGParam JSON: {}", e))?;
+
+        // 验证参数
+        if csg_param.data.is_empty() {
+            return Err("CSGParam data cannot be empty".to_string());
+        }
+
+        // 验证参数类型
+        if csg_param.param_type != "read" && csg_param.param_type != "write" {
+            return Err("Invalid param_type. Must be 'read' or 'write'".to_string());
+        }
+
+        // 验证每个数据项
+        for (index, frame_data) in csg_param.data.iter().enumerate() {
+            if frame_data.point.trim().is_empty() {
+                return Err(format!("Point cannot be empty at index {}", index));
+            }
+            if frame_data.item.trim().is_empty() {
+                return Err(format!("Item cannot be empty at index {}", index));
+            }
+            
+            // 如果是写操作，检查数据内容
+            if csg_param.param_type == "write" && frame_data.data.as_ref().map_or(true, |d| d.trim().is_empty()) {
+                return Err(format!("Data content cannot be empty for write operation at index {}", index));
+            }
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_param_frame_with_params(csg_param);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+    #[wasm_bindgen]
+    pub fn build_csg_read_curdata_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 CSGParam 结构体
+        let csg_param: CSGCurrentDataFrame = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse CSGParam JSON: {}", e))?;
+
+        // 验证参数
+        if csg_param.data.is_empty() {
+            return Err("CSGParam data cannot be empty".to_string());
+        }
+
+        // 验证每个数据项
+        for (index, frame_data) in csg_param.data.iter().enumerate() {
+            if frame_data.point.trim().is_empty() {
+                return Err(format!("Point cannot be empty at index {}", index));
+            }
+            if frame_data.item.trim().is_empty() {
+                return Err(format!("Item cannot be empty at index {}", index));
+            }
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_read_curdata_frame(csg_param.data);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+    
+    #[wasm_bindgen]
+    pub fn build_csg_read_hisdata_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 CSGParam 结构体
+        let csg_param: CSGHistoryDataFrame = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse CSGParam JSON: {}", e))?;
+
+        // 验证参数
+        if csg_param.data.is_empty() {
+            return Err("CSGParam data cannot be empty".to_string());
+        }
+
+        // 验证每个数据项
+        for (index, frame_data) in csg_param.data.iter().enumerate() {
+            if frame_data.point.trim().is_empty() {
+                return Err(format!("Point cannot be empty at index {}", index));
+            }
+            if frame_data.item.trim().is_empty() {
+                return Err(format!("Item cannot be empty at index {}", index));
+            }
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_read_hisdata_frame(csg_param);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+    #[wasm_bindgen]
+    pub fn build_csg_read_alarm_event_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 CSGAlarmEventFrame 结构体
+        let csg_param: CSGAlarmEventFrame = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse CSGAlarmEventFrame JSON: {}", e))?;
+
+        // 验证参数
+        if csg_param.data.is_empty() {
+            return Err("CSGAlarmEventFrame data cannot be empty".to_string());
+        }
+
+        // 验证每个数据项
+        for (index, frame_data) in csg_param.data.iter().enumerate() {
+            if frame_data.point.trim().is_empty() {
+                return Err(format!("Point cannot be empty at index {}", index));
+            }
+            if frame_data.item.trim().is_empty() {
+                return Err(format!("Item cannot be empty at index {}", index));
+            }
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_read_alarm_event_frame(csg_param);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+    #[wasm_bindgen]
+    pub fn build_csg_normal_task_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 NormalTaskParam 结构体
+        let task_param: basefunc::frame_csg::NormalTaskParam = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse NormalTaskParam JSON: {}", e))?;
+
+        // 验证参数
+        if task_param.task_id == 0 {
+            return Err("Task ID cannot be zero".to_string());
+        }
+
+        if task_param.points.trim().is_empty() {
+            return Err("Points cannot be empty".to_string());
+        }
+
+        if task_param.items.trim().is_empty() {
+            return Err("Items cannot be empty".to_string());
+        }
+
+        // 验证时间戳（如果不为0的话）
+        if task_param.report_base_time != 0 && task_param.report_base_time < 946684800000 {
+            return Err("Invalid report_base_time timestamp".to_string());
+        }
+
+        if task_param.read_base_time != 0 && task_param.read_base_time < 946684800000 {
+            return Err("Invalid read_base_time timestamp".to_string());
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_normal_task_frame(task_param);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+    #[wasm_bindgen]
+    pub fn build_csg_meter_task_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 MeterTaskParam 结构体
+        let task_param: basefunc::frame_csg::MeterTaskParam = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse MeterTaskParam JSON: {}", e))?;
+
+        // 验证参数
+        if task_param.task_id == 0 {
+            return Err("Task ID cannot be zero".to_string());
+        }
+
+        if task_param.points.trim().is_empty() {
+            return Err("Points cannot be empty".to_string());
+        }
+
+        if task_param.items.trim().is_empty() {
+            return Err("Items cannot be empty".to_string());
+        }
+
+        // 验证时间戳（如果不为0的话）
+        if task_param.report_base_time != 0 && task_param.report_base_time < 946684800000 {
+            return Err("Invalid report_base_time timestamp".to_string());
+        }
+
+        if task_param.meter_read_base_time != 0 && task_param.meter_read_base_time < 946684800000 {
+            return Err("Invalid meter_read_base_time timestamp".to_string());
+        }
+
+        if task_param.read_base_time != 0 && task_param.read_base_time < 946684800000 {
+            return Err("Invalid read_base_time timestamp".to_string());
+        }
+
+        // 构建报文
+        let frame_data = FrameCsg::build_csg_meter_task_frame(task_param);
+
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+    #[wasm_bindgen]
+    pub fn get_item_config(&self, item_id: &str, protocol: &str, region: &str) -> Result<String, String> {
+        ProtocolConfigManager::get_config_xml(item_id, protocol, region, Some(0))
+            .ok_or_else(|| "can't find item".to_string())
+            .and_then(|xml_element| {
+                serde_json::to_string(&xml_element)
+                    .map_err(|e| format!("Failed to serialize XML element: {}", e))
+            })
+    }    
 }
 
 // For Tauri/desktop usage - direct function exports

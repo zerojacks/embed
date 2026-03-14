@@ -101,7 +101,7 @@ export default function TimestampPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="shrink-0 p-6 border-b border-base-300">
+      <div className="shrink-0 p-4 border-b border-base-300">
         <div className="flex items-center gap-4">
           <Link to="/tools" className="btn btn-ghost btn-circle">
             <ArrowLeft className="w-5 h-5" />
