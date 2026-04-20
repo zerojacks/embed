@@ -40533,7 +40533,12 @@
 			<sign>yes</sign>
 		</dataItem>
 	</dataItem>
-
+	<dataItem id="06120900" protocol="csg13" region="南网">
+		<name>（模块负荷记录）零线电流</name>
+		<length>3</length>
+		<unit>A</unit>
+		<decimal>3</decimal>
+	</dataItem>
 	<dataItem id="061001FF" protocol="csg13" region="南网">
 		<name>电压数据块</name>
 		<length>6</length>
@@ -68289,4 +68294,103 @@
 			<value key="FF">未定义异常</value>
 		</splitByLength>
 	</template>
+	<!--ARD90告警数据配置-->
+	<dataItem id="ARD90000" protocol="csg13" region="南网">
+		<name>ARD90告警数据</name>
+		<length>unknown</length>
+		<type>ARD90</type>
+	</dataItem>
+	<template id="ARD90" protocol="csg13" region="南网">
+		<splitByLength>
+			<name>告警状态</name>
+			<length>1</length>
+			<value key="00">恢复</value>
+			<value key="01">发生</value>
+		</splitByLength>
+		<splitByLength>
+			<name>告警发生时间</name>
+			<length>6</length>
+			<time>ssmmhhDDMMYY</time>
+		</splitByLength>
+		<splitByLength>
+			<name>发生时数据</name>
+			<length>variable</length>
+			<type>HEX</type>
+		</splitByLength>
+		<splitByLength>
+			<name>变更APP数量</name>
+			<length>1</length>
+			<type>BCD</type>
+		</splitByLength>
+		<foreach count="变更APP数量">
+			<name>APP{index}变更信息</name>
+			<type>APPCHANGEINFO</type>
+		</foreach>
+	</template>
+	<template id="APPCHANGEINFO" protocol="csg13" region="南网">
+		<name>APP变更信息</name>
+		<splitByLength>
+			<name>APP类别</name>
+			<length>1</length>
+			<type>BIN</type>
+		</splitByLength>
+		<splitByLength>
+			<name>APP变更标志</name>
+			<length>1</length>
+			<type>BIN</type>
+			<splitbit>
+				<bit id="0">
+					<name>厂家编号变更</name>
+					<value key="0">未变</value>
+					<value key="1">变更</value>
+				</bit>
+				<bit id="1">
+					<name>版本号变更</name>
+					<value key="0">未变</value>
+					<value key="1">变更</value>
+				</bit>
+				<bit id="2">
+					<name>CRC校验变更</name>
+					<value key="0">未变</value>
+					<value key="1">变更</value>
+				</bit>
+				<bit id="3-7">
+					<name>保留</name>
+				</bit>
+			</splitbit>
+		</splitByLength>
+	</template>
+	<dataItem id="E1009D00" protocol="csg13" region="南网">
+		<name>时钟偏差数据</name>
+		<length>23</length>
+		<splitByLength>
+			<name>终端和电表时钟偏差秒数</name>
+			<length>4</length>
+			<type>BCD</type>
+			<unit>s</unit>
+		</splitByLength>
+		<splitByLength>
+			<name>数据有效位</name>
+			<length>1</length>
+			<type>BCD</type>
+			<value key="00">有效，未超过阈值</value>
+			<value key="01">无效，超过阈值</value>
+			<value key="other">未知</value>
+		</splitByLength>
+		<splitByLength>
+			<name>终端下发抄读电表时钟任务的终端时间T1</name>
+			<length>6</length>
+			<time>ssmmhhDDMMYY</time>
+		</splitByLength>
+		<splitByLength>
+			<name>终端接收到电表时钟的终端时间T2</name>
+			<length>6</length>
+			<time>ssmmhhDDMMYY</time>
+		</splitByLength>
+		<splitByLength>
+			<name>电表返回的电表时间T3</name>
+			<length>6</length>
+			<time>ssmmhhDDMMYY</time>
+		</splitByLength>
+	</dataItem>
 </config>
