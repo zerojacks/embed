@@ -96,6 +96,15 @@ pub struct MeterTaskParam {
     pub items: String,   // 数据标识编码
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct WaveRecordParam {
+    pub alarm_id: u32,
+    pub points: String,
+    pub wave_type: u8,
+    pub time: String,
+    pub start_idx: Option<u16>,
+}
+
 #[derive(Debug)]
 pub enum FramePos {
     PosStart0 = 0,
@@ -5848,6 +5857,59 @@ impl FrameCsg {
         // 添加数据标识编码列表
         for item in &items {
             FrameFun::item_to_di(*item, &mut frame);
+        }
+
+        // 完成帧构建
+        let mut data_slice = frame[FramePos::PosCtrl as usize..].to_vec();
+        Self::set_frame_finish(&mut data_slice, &mut frame);
+
+        // 计算数据长度并设置
+        let data_len = frame.len() - (FramePos::PosCtrl as usize) - 2;
+        Self::set_frame_len(data_len, &mut frame);
+
+        frame
+    }
+
+    pub fn build_csg_wave_record_frame(wave_record_param: WaveRecordParam) -> Vec<u8> {
+        let mut frame = vec![0u8; FramePos::PosData as usize];
+        let adress = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+
+        // 初始化帧头，使用AFN=0x0f表示文件传输
+        Self::init_frame(
+            0x4A,
+            0x0F,
+            &adress,
+            0x10,
+            Self::get_frame_seq(0, 1, 1, 0),
+            &mut frame,
+        );
+
+        let points = vec![0]; // 使用广播点
+        let item = if let Some(start_idx) = wave_record_param.start_idx {
+            0xE3010008
+        } else {
+            0xE3010007
+        };
+
+        let items = vec![item];
+        Self::add_point_and_item_to_frame(points, items, &mut frame);
+
+        frame.extend_from_slice(&wave_record_param.alarm_id.to_le_bytes());
+        // 解析信息点标识
+        let points = match FrameFun::prase_text_to_point(wave_record_param.points) {
+            Ok(p) => p,
+            Err(_) => vec![0xFFFF], // 默认使用广播点
+        };
+        for point in &points {
+            Self::add_point_to_frame(*point, &mut frame);
+        }
+        frame.push(wave_record_param.wave_type);
+        let mut time = FrameFun::get_frame_list_from_str(&wave_record_param.time);
+        time.reverse();
+        frame.extend_from_slice(&time);
+
+        if let Some(start_idx) = wave_record_param.start_idx {
+            frame.extend_from_slice(&start_idx.to_le_bytes());
         }
 
         // 完成帧构建

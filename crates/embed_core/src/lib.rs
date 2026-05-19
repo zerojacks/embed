@@ -630,6 +630,35 @@ impl FrameAnalyzer {
     }
 
     #[wasm_bindgen]
+    pub fn build_csg_wave_record_frame(&self, csg_param_json: &str) -> Result<String, String> {
+        // 解析 JSON 字符串为 WaveRecordParam 结构体
+        let wave_record_param: basefunc::frame_csg::WaveRecordParam = serde_json::from_str(csg_param_json)
+            .map_err(|e| format!("Failed to parse WaveRecordParam JSON: {}", e))?;
+
+        // 验证参数
+        if wave_record_param.alarm_id == 0 {
+            return Err("Alarm ID cannot be zero".to_string());
+        }
+
+        if wave_record_param.points.trim().is_empty() {
+            return Err("Points cannot be empty".to_string());
+        }
+
+        if wave_record_param.wave_type == 0 {
+            return Err("Wave type cannot be zero".to_string());
+        }
+
+        if wave_record_param.time.trim().is_empty() {
+            return Err("Time cannot be timestamp".to_string());
+        }
+        let frame_data = FrameCsg::build_csg_wave_record_frame(wave_record_param);
+        // 转换为十六进制字符串
+        let hex_string = FrameFun::get_data_str_with_space(&frame_data);
+        Ok(hex_string)
+    }
+
+
+    #[wasm_bindgen]
     pub fn get_item_config(&self, item_id: &str, protocol: &str, region: &str) -> Result<String, String> {
         ProtocolConfigManager::get_config_xml(item_id, protocol, region, Some(0))
             .ok_or_else(|| "can't find item".to_string())

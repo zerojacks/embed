@@ -810,6 +810,7 @@ impl FrameFun {
         // Define the correct sequence with milliseconds
         let correct = "CCYYMMDDWWhhmmssmsxxxx";
 
+        info!("format_str: {:?} data_array: {:?}", format_str, data_array);
         // Define format mapping
         let mut format_mapping = HashMap::new();
         format_mapping.insert("CC", "{:02X}");
@@ -845,11 +846,25 @@ impl FrameFun {
         ];
 
         // Iterate through the format string
+        let mut segment_positions = HashMap::new();
+        let mut i = 0;
+        while i < format_str.len() {
+            if i + 4 <= format_str.len() && &format_str[i..i + 4] == "xxxx" {
+                segment_positions.insert("xxxx", i / 2);
+                i += 4;
+            } else if i + 2 <= format_str.len() {
+                let seg = &format_str[i..i + 2];
+                segment_positions.insert(seg, i / 2);
+                i += 2;
+            } else {
+                i += 1;
+            }
+        }
+
         while pos < correct.len() {
             // Check if we're at the millisecond position (xxxx)
             if pos <= correct.len() - 4 && &correct[pos..pos + 4] == "xxxx" {
-                if let Some(index) = format_str.find("xxxx") {
-                    let array_index = index / 2;
+                if let Some(&array_index) = segment_positions.get("xxxx") {
                     // For milliseconds, we need to combine two bytes
                     if array_index + 1 < new_array.len() {
                         let msb = new_array[array_index] as u16;
@@ -867,8 +882,7 @@ impl FrameFun {
             } else if pos <= correct.len() - 2 {
                 // Handle standard 2-character formats (YY, MM, DD, etc.)
                 let corr = &correct[pos..pos + 2];
-                if let Some(index) = format_str.find(corr) {
-                    let array_index = index / 2;
+                if let Some(&array_index) = segment_positions.get(corr) {
                     if array_index < new_array.len() {
                         let value = new_array[array_index];
                         if let Some(fmt) = format_mapping.get(corr) {

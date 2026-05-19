@@ -630,7 +630,7 @@ impl FrameAnalisyic {
         // Second pass: If no matching key was found, check for "other"
         for value_elem in value_elements.iter() {
             if let Some(key) = value_elem.get_attribute("key") {
-                if key == "other" {
+                if key.to_lowercase() == "other" {
                     // If key is "other", use its associated value
                     found_value = value_elem
                         .get_value()
@@ -686,7 +686,7 @@ impl FrameAnalisyic {
                     .unwrap_or("0")
                     .parse::<usize>()
                     .unwrap_or(0);
-                let sign = is_sign.as_deref().unwrap_or("no") == "yes";
+                let sign = is_sign.as_deref().unwrap_or("no").to_lowercase() == "yes";
 
                 subitem_value = FrameFun::bcd_to_decimal(data_segment, decimal, need_delete, sign);
 
@@ -737,7 +737,7 @@ impl FrameAnalisyic {
                 .unwrap_or("0")
                 .parse::<usize>()
                 .unwrap_or(0);
-            let sign = is_sign.as_deref().unwrap_or("no") == "yes";
+            let sign = is_sign.as_deref().unwrap_or("no").to_lowercase() == "yes";
 
             let ret = Self::prase_simple_type_data(
                 data_item_elem,
@@ -779,7 +779,7 @@ impl FrameAnalisyic {
             .unwrap_or("0")
             .parse::<usize>()
             .unwrap_or(0);
-        let sign = is_sign.as_deref().unwrap_or("no") == "yes";
+        let sign = is_sign.as_deref().unwrap_or("no").to_lowercase() == "yes";
 
         let subitem_type = data_item_elem
             .get_child_text("type")
@@ -885,7 +885,7 @@ impl FrameAnalisyic {
                 let offset = bitpattern.get_attribute("offset");
                 info!("bit type {:?} offset {:?}", bit_type, offset);
                 if let Some(bit_type) = bit_type {
-                    if bit_type == "index" {
+                    if bit_type.to_lowercase() == "index" {
                         // 智能解析offset，支持数值和字符串
                         let offset_value = if let Some(offset_str) = offset.as_deref() {
                             // 尝试直接解析为数字

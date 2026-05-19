@@ -20,6 +20,7 @@ export const frameanalyzer_build_csg_read_hisdata_frame: (a: number, b: number, 
 export const frameanalyzer_build_csg_read_alarm_event_frame: (a: number, b: number, c: number) => [number, number, number, number];
 export const frameanalyzer_build_csg_normal_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
 export const frameanalyzer_build_csg_meter_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
+export const frameanalyzer_build_csg_wave_record_frame: (a: number, b: number, c: number) => [number, number, number, number];
 export const frameanalyzer_get_item_config: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
 export const wasm_bindgen__closure__destroy__h5178a76e6e8514ea: (a: number, b: number) => void;
 export const wasm_bindgen__convert__closures_____invoke__h5469f54423cce40c: (a: number, b: number, c: any, d: any) => void;

@@ -10,6 +10,7 @@ export class FrameAnalyzer {
     build_csg_read_alarm_event_frame(csg_param_json: string): string;
     build_csg_read_curdata_frame(csg_param_json: string): string;
     build_csg_read_hisdata_frame(csg_param_json: string): string;
+    build_csg_wave_record_frame(csg_param_json: string): string;
     /**
      * Convert byte array to hex string with spaces
      */
@@ -63,6 +64,7 @@ export interface InitOutput {
     readonly frameanalyzer_build_csg_read_alarm_event_frame: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_build_csg_normal_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_build_csg_meter_task_frame: (a: number, b: number, c: number) => [number, number, number, number];
+    readonly frameanalyzer_build_csg_wave_record_frame: (a: number, b: number, c: number) => [number, number, number, number];
     readonly frameanalyzer_get_item_config: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
     readonly wasm_bindgen__closure__destroy__h5178a76e6e8514ea: (a: number, b: number) => void;
     readonly wasm_bindgen__convert__closures_____invoke__h5469f54423cce40c: (a: number, b: number, c: any, d: any) => void;

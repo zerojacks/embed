@@ -68367,6 +68367,7 @@
 			<type>BCD</type>
 			<decimal>1</decimal>
 			<unit>V</unit>
+			<sign>yes</sign>
 		</splitByLength>
 		<splitByLength>
 			<name>B相电压有效值</name>
@@ -68374,6 +68375,7 @@
 			<type>BCD</type>
 			<decimal>1</decimal>
 			<unit>V</unit>
+			<sign>yes</sign>
 		</splitByLength>
 		<splitByLength>
 			<name>C相电压有效值</name>
@@ -68381,6 +68383,7 @@
 			<type>BCD</type>
 			<decimal>1</decimal>
 			<unit>V</unit>
+			<sign>yes</sign>
 		</splitByLength>
 		<splitByLength>
 			<name>A电流有效值</name>
@@ -68388,6 +68391,7 @@
 			<type>BCD</type>
 			<decimal>3</decimal>
 			<unit>A</unit>
+			<sign>yes</sign>
 		</splitByLength>
 		<splitByLength>
 			<name>B电流有效值</name>
@@ -68395,6 +68399,7 @@
 			<type>BCD</type>
 			<decimal>3</decimal>
 			<unit>A</unit>
+			<sign>yes</sign>
 		</splitByLength>
 		<splitByLength>
 			<name>C电流有效值</name>
@@ -68402,6 +68407,7 @@
 			<type>BCD</type>
 			<decimal>3</decimal>
 			<unit>A</unit>
+			<sign>yes</sign>
 		</splitByLength>
 	</template>
 	<template id="UNRECEIVEIDLIST" protocol="csg13" region="南网">

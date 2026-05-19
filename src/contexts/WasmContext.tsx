@@ -4,7 +4,7 @@ import type { AnalysisResult, ProtocolType, ProcessFrameResponse } from '../type
 import { toast } from 'react-hot-toast'
 import { wasmManager } from '../utils/wasmManager'
 import { FrameAnalyzer } from '../../pkg-web/embed_core'
-import type { CSGCurrentDataFrame, CSGHistoryDataFrame, CSGParam, CSGAlarmEventFrame, NormalTaskParam, MeterTaskParam } from '@/types/csgframe'
+import type { CSGCurrentDataFrame, CSGHistoryDataFrame, CSGParam, CSGAlarmEventFrame, NormalTaskParam, MeterTaskParam, WaveRecordParam } from '@/types/csgframe'
 
 interface WasmContextType {
     analyzer: FrameAnalyzer | null
@@ -26,6 +26,7 @@ interface WasmContextType {
     generatorCSGAlarmEventFrame(param_data: CSGAlarmEventFrame): Promise<string>
     generatorNormalTaskFrame(param_data: NormalTaskParam): Promise<string>
     generatorMeterTaskFrame(param_data: MeterTaskParam): Promise<string>
+    generatorCSGReadWaveRecord(param_data: WaveRecordParam): Promise<string>
     getItemConfig(item_id: string, protocol: string, region: string): Promise<string>
 }
 
@@ -294,6 +295,19 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         }
     }
 
+    const generatorCSGReadWaveRecord = async (param_data: WaveRecordParam): Promise<string> => {
+        if (!analyzer) {
+            throw new Error('WASM analyzer not initialized')
+        }
+        try {
+            const result = analyzer.build_csg_wave_record_frame(JSON.stringify(param_data));
+            return result
+        } catch (error) {
+            console.error(`生成CSG波形数据失败${error}`)
+            return ""
+        }
+    }
+
     const getItemConfig = async (item_id: string, protocol: string, region: string): Promise<string> => {
         if(!analyzer) {
             throw new Error('WASM analyzer not initialized')
@@ -328,6 +342,7 @@ export const WasmProvider: React.FC<WasmProviderProps> = ({
         generatorCSGAlarmEventFrame,
         generatorNormalTaskFrame,
         generatorMeterTaskFrame,
+        generatorCSGReadWaveRecord,
         getItemConfig
     }
 

@@ -7,31 +7,54 @@ interface DateTimePickerProps {
     onChange: (timestamp: number) => void;
     placeholder?: string;
     className?: string;
+    showSeconds?: boolean;
+    showMilliseconds?: boolean;
 }
 
 const DateTimePicker: React.FC<DateTimePickerProps> = ({
     value,
     onChange,
     placeholder = "选择日期时间",
-    className = ""
+    className = "",
+    showSeconds = false,
+    showMilliseconds = false
 }) => {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date(value));
+    const [msValue, setMsValue] = useState<number>(new Date(value).getMilliseconds());
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        setSelectedDate(new Date(value));
+        const date = new Date(value);
+        setSelectedDate(date);
+        setMsValue(date.getMilliseconds());
     }, [value]);
 
     const handleDateChange = (date: Date | null) => {
         if (date) {
-            setSelectedDate(date);
-            onChange(date.getTime());
-            setIsOpen(false);
+            const newDate = new Date(date);
+            if (showMilliseconds) {
+                newDate.setMilliseconds(msValue);
+            }
+            setSelectedDate(newDate);
+            onChange(newDate.getTime());
+            if (!showMilliseconds && !showSeconds) {
+                setIsOpen(false);
+            }
         }
     };
 
+    const handleMsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = parseInt(e.target.value) || 0;
+        val = Math.max(0, Math.min(999, val));
+        setMsValue(val);
+        const newDate = new Date(selectedDate);
+        newDate.setMilliseconds(val);
+        setSelectedDate(newDate);
+        onChange(newDate.getTime());
+    };
+
     const CustomInput = React.forwardRef<HTMLInputElement, any>((props, ref) => (
-        <div className="relative">
+        <div className="relative flex-1">
             <input
                 {...props}
                 ref={ref}
@@ -59,26 +82,42 @@ const DateTimePicker: React.FC<DateTimePickerProps> = ({
     ));
 
     return (
-        <div className="relative">
-            <DatePicker
-                selected={selectedDate}
-                onChange={handleDateChange}
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={1}
-                dateFormat="yyyy-MM-dd HH:mm"
-                customInput={<CustomInput />}
-                open={isOpen}
-                onClickOutside={() => setIsOpen(false)}
-                popperClassName="z-50"
-                calendarClassName="react-datepicker-custom"
-                dayClassName={() =>
-                    "react-datepicker-day-custom"
-                }
-                timeClassName={() =>
-                    "react-datepicker-time-custom"
-                }
-            />
+        <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+                <DatePicker
+                    selected={selectedDate}
+                    onChange={handleDateChange}
+                    showTimeSelect
+                    timeFormat={showSeconds ? "HH:mm:ss" : "HH:mm"}
+                    timeIntervals={1}
+                    dateFormat={showSeconds ? "yyyy-MM-dd HH:mm:ss" : "yyyy-MM-dd HH:mm"}
+                    customInput={<CustomInput />}
+                    open={isOpen}
+                    onClickOutside={() => setIsOpen(false)}
+                    popperClassName="z-50"
+                    calendarClassName="react-datepicker-custom"
+                    dayClassName={() =>
+                        "react-datepicker-day-custom"
+                    }
+                    timeClassName={() =>
+                        "react-datepicker-time-custom"
+                    }
+                />
+            </div>
+            {showMilliseconds && (
+                <div className="flex items-center gap-1 shrink-0">
+                    <input
+                        type="number"
+                        className="input input-bordered input-primary w-20 text-center p-0"
+                        value={msValue}
+                        onChange={handleMsChange}
+                        min={0}
+                        max={999}
+                        placeholder="ms"
+                    />
+                    <span className="text-xs font-bold">ms</span>
+                </div>
+            )}
 
             {/* Custom styles for react-datepicker */}
             <style>{`

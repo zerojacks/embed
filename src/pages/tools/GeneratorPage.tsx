@@ -8,6 +8,7 @@ import HistoryFrame from './CSGFrame/historyFrame'
 import AlarmEventFrame from './CSGFrame/alarmEventFrame'
 import NormalTaskFrame from './CSGFrame/normalTaskFrame'
 import MeterTaskFrame from './CSGFrame/meterTaskFrame'
+import WaveRecordFrame from './CSGFrame/waveRecordFrame'
 
 const FrameType = {
   param: "参数类",
@@ -17,6 +18,7 @@ const FrameType = {
   event: '事件类',
   normaltask: '普通任务',
   metertask: '表端任务',
+  waveRecord: '录波数据',
 } as const
 
 type CSGFrameType = keyof typeof FrameType
@@ -184,6 +186,9 @@ export default function GeneratorPage() {
                 )}
                 {activeTab === 'metertask' && (
                   <MeterTaskFrame onFrameGenerator={handleFrameGenerator} />
+                )}
+                {activeTab === 'waveRecord' && (
+                  <WaveRecordFrame onFrameGenerator={handleFrameGenerator} />
                 )}
                 {!['param', 'curdata', 'history', 'alarm', 'event', 'normaltask', 'metertask', 'autoconfig'].includes(activeTab) && (
                   <div className="card bg-base-100 shadow-lg border border-base-300 h-full">
@@ -373,6 +378,12 @@ export default function GeneratorPage() {
                   )}
                   {editingRecord.type === 'metertask' && (
                     <MeterTaskFrame
+                      onFrameGenerator={handleUpdateRecord}
+                      initialParams={editingRecord.params}
+                    />
+                  )}
+                  {editingRecord.type === 'waveRecord' && (
+                    <WaveRecordFrame
                       onFrameGenerator={handleUpdateRecord}
                       initialParams={editingRecord.params}
                     />

@@ -76,3 +76,11 @@ export interface MeterTaskParam {
     points: string;//信息点标识
     items: string;//数据标识编码
 }
+
+export interface WaveRecordParam {
+    alarm_id: number;
+    points: string;
+    wave_type: number;
+    time: string;
+    start_idx?: number;
+}
