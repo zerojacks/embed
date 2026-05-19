@@ -87,6 +87,18 @@ const tools = [
     status: 'available'
   },
   {
+    id: 'comtrade',
+    title: 'COMTRADE 解析',
+    description: '解析电力系统暂态数据文件 (.cfg / .dat)',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+    color: 'warning',
+    status: 'available'
+  },
+  {
     id: 'generator',
     title: '报文生成',
     description: '生成标准协议报文',
@@ -138,48 +150,48 @@ export default function ToolsPage() {
       {/* Tools Grid */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
-          {tools.map((tool) => (
-            <div key={tool.id}>
-              {tool.status === 'available' ? (
-                <Link
-                  to={`/tools/${tool.id}`}
-                  className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300 cursor-pointer block"
-                >
-                  <div className="card-body p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 bg-${tool.color}/10 rounded-xl flex items-center justify-center text-${tool.color}`}>
-                        {tool.icon}
-                      </div>
-                      <div className="badge badge-sm">
-                        <span className="text-success">可用</span>
-                      </div>
-                    </div>
-
-                    <h3 className="card-title text-lg mb-2">{tool.title}</h3>
-                    <p className="text-sm text-base-content/70 mb-4 flex-1">
-                      {tool.description}
-                    </p>
+          {tools.map((tool) => tool.status === 'available' ? (
+            <Link
+              key={tool.id}
+              to={`/tools/${tool.id}`}
+              className="card h-full bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300 cursor-pointer"
+            >
+              <div className="card-body p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 bg-${tool.color}/10 rounded-xl flex items-center justify-center text-${tool.color}`}>
+                    {tool.icon}
                   </div>
-                </Link>
-              ) : (
-                <div className="card bg-base-100 shadow-lg border border-base-300 opacity-60 cursor-not-allowed">
-                  <div className="card-body p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 bg-${tool.color}/10 rounded-xl flex items-center justify-center text-${tool.color}`}>
-                        {tool.icon}
-                      </div>
-                      <div className="badge badge-sm">
-                        <span className="text-warning">开发中</span>
-                      </div>
-                    </div>
-
-                    <h3 className="card-title text-lg mb-2">{tool.title}</h3>
-                    <p className="text-sm text-base-content/70 mb-4 flex-1">
-                      {tool.description}
-                    </p>
+                  <div className="badge badge-sm">
+                    <span className="text-success">可用</span>
                   </div>
                 </div>
-              )}
+
+                <h3 className="card-title text-lg mb-2">{tool.title}</h3>
+                <p className="text-sm text-base-content/70 mb-4 flex-1">
+                  {tool.description}
+                </p>
+              </div>
+            </Link>
+          ) : (
+            <div
+              key={tool.id}
+              className="card h-full bg-base-100 shadow-lg border border-base-300 opacity-60 cursor-not-allowed"
+            >
+              <div className="card-body p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 bg-${tool.color}/10 rounded-xl flex items-center justify-center text-${tool.color}`}>
+                    {tool.icon}
+                  </div>
+                  <div className="badge badge-sm">
+                    <span className="text-warning">开发中</span>
+                  </div>
+                </div>
+
+                <h3 className="card-title text-lg mb-2">{tool.title}</h3>
+                <p className="text-sm text-base-content/70 mb-4 flex-1">
+                  {tool.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>

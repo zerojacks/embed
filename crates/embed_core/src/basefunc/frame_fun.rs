@@ -808,7 +808,7 @@ impl FrameFun {
 
     pub fn parse_time_data(data_array: &[u8], format_str: &str, need_delete: bool) -> String {
         // Define the correct sequence with milliseconds
-        let correct = "CCYYMMDDWWhhmmssxxxx";
+        let correct = "CCYYMMDDWWhhmmssmsxxxx";
 
         // Define format mapping
         let mut format_mapping = HashMap::new();
@@ -819,6 +819,7 @@ impl FrameFun {
         format_mapping.insert("hh", "{:02X}时");
         format_mapping.insert("mm", "{:02X}分");
         format_mapping.insert("ss", "{:02X}秒");
+        format_mapping.insert("ms", "{:02X}0毫秒");
         format_mapping.insert("WW", "星期:");
         format_mapping.insert("xxxx", "{:04X}毫秒");
 
@@ -870,7 +871,7 @@ impl FrameFun {
                     let array_index = index / 2;
                     if array_index < new_array.len() {
                         let value = new_array[array_index];
-                        if let Some(fmt) = format_mapping.get(&format_str[index..index + 2]) {
+                        if let Some(fmt) = format_mapping.get(corr) {
                             if corr == "WW" {
                                 // Handle the special case for weekdays
                                 let weekday_index = value as usize;

@@ -17,6 +17,7 @@ import StatisticsPage from './pages/tools/StatisticsPage'
 import ItemdataPrasePage from './pages/tools/ItemdataPrasePage'
 import MeasurementPointsPage from './pages/tools/MeasurementPointsPage'
 import TaskExtractPage from './pages/tools/TaskExtractPage'
+import ComtradePage from './pages/tools/ComtradePage'
 
 function App() {
   useEffect(() => {
@@ -42,6 +43,7 @@ function App() {
               <Route path="tools/generator" element={<GeneratorPage />} />
               <Route path="tools/statistics" element={<StatisticsPage />} />
               <Route path="tools/itemdata-parse" element={<ItemdataPrasePage />} />
+              <Route path="tools/comtrade" element={<ComtradePage />} />
               <Route path="config" element={<ConfigPage />} />
               <Route path="feedback" element={<FeedbackPage />} />
             </Route>

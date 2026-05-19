@@ -5317,7 +5317,30 @@ impl FrameCsg {
             let dis_data_identifier: String;
             if let Some(mut data_item_elem) = data_item_elem {
                 (sub_length, sub_datament) = if dir == 1 && prm == 0 {
-                    (1, &data_segment[pos + 4..pos + 4 + 1])
+                    let som_dir = data_item_elem.get_attribute("dir").cloned();
+                    let sub_length = if som_dir == Some(dir.to_string()) {
+                        let sub_length_cont = data_item_elem.get_child_text("length");
+                        if let Some(sub_length_cont) = sub_length_cont {
+                            if sub_length_cont.to_uppercase() == "UNKNOWN" {
+                                Self::calculate_item_length(
+                                    &mut data_item_elem,
+                                    &data_segment[pos + 4..],
+                                    protocol,
+                                    region,
+                                    Some(dir),
+                                    None,
+                                )
+                            } else {
+                                sub_length_cont.parse::<usize>().unwrap()
+                            }
+                        } else {
+                            1
+                        }
+                    } else {
+                        1
+                    };
+                    info!("som_dir: {:?}", som_dir);
+                    (sub_length, &data_segment[pos + 4..pos + 4 + sub_length])
                 } else {
                     let sub_length_cont = data_item_elem.get_child_text("length");
                     let mut sub_length = if let Some(sub_length_cont) = sub_length_cont {

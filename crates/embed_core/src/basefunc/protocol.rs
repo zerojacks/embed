@@ -989,8 +989,8 @@ impl FrameAnalisyic {
         };
 
         // 确保 data_segment 长度足够处理时间数据
-        let time_data: &[u8] = if data_segment.len() >= 6 {
-            &data_segment[..6]
+        let time_data: &[u8] = if data_segment.len() >= time_format.len() / 2 {
+            &data_segment[..time_format.len() / 2]
         } else {
             data_segment
         };

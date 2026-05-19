@@ -264,6 +264,7 @@ impl XmlElement {
     }
 
     pub fn update_value(&mut self, name: &str, new_value: String) {
+        info!("update_value: {:?} {:?}", name, new_value);
         if let Some(child) = self.children.iter_mut().find(|child| child.name == name) {
             child.value = Some(new_value);
         } else {
@@ -451,7 +452,7 @@ impl QframeConfig {
                     for attr in e.attributes() {
                         if let Ok(attr) = attr {
                             let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                            let value = String::from_utf8_lossy(&attr.value).to_string();
+                            let value = String::from_utf8_lossy(&attr.value.as_ref()).to_string();
                             attributes.insert(key, value);
                         }
                     }
@@ -570,6 +571,7 @@ impl QframeConfig {
         let tree = self.build_tree(&root);
         *self.config.write().unwrap() = Some(tree);
         *self.config_path.write().unwrap() = None;
+        *self.config_cache.write().unwrap() = Cache::new();
 
         Ok(())
     }
