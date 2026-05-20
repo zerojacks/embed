@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Binary } from 'lucide-react'
 
 const tools = [
   {
@@ -84,6 +85,14 @@ const tools = [
       </svg>
     ),
     color: 'error',
+    status: 'available'
+  },
+  {
+    id: 'bit-manipulation',
+    title: '位操作工具',
+    description: '十六进制数据的位级别查看、设置和清空',
+    icon: <Binary className="w-6 h-6" />,
+    color: 'primary',
     status: 'available'
   },
   {

@@ -18,6 +18,7 @@ import ItemdataPrasePage from './pages/tools/ItemdataPrasePage'
 import MeasurementPointsPage from './pages/tools/MeasurementPointsPage'
 import TaskExtractPage from './pages/tools/TaskExtractPage'
 import ComtradePage from './pages/tools/ComtradePage'
+import BitManipulationPage from './pages/tools/BitManipulationPage'
 
 function App() {
   useEffect(() => {
@@ -38,6 +39,7 @@ function App() {
               <Route path="tools/converter" element={<ConverterPage />} />
               <Route path="tools/timestamp" element={<TimestampPage />} />
               <Route path="tools/checksum" element={<ChecksumPage />} />
+              <Route path="tools/bit-manipulation" element={<BitManipulationPage />} />
               <Route path="tools/measurement-points" element={<MeasurementPointsPage />} />
               <Route path="tools/task-extract" element={<TaskExtractPage />} />
               <Route path="tools/generator" element={<GeneratorPage />} />
