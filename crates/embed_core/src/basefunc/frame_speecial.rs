@@ -1,12 +1,11 @@
 use crate::basefunc::frame_csg::FrameCsg;
-use crate::basefunc::frame_err::CustomError;
 use crate::basefunc::frame_fun::FrameFun;
 use crate::basefunc::protocol::ProtocolInfo;
 use crate::basefunc::protocol::{AnalysicErr, FrameAnalisyic};
 use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement};
 use serde_json::Value;
 use std::error::Error;
-use tracing::info;
+use tracing::{info,error};
 pub struct SpcialFrame;
 
 impl SpcialFrame {
@@ -42,7 +41,7 @@ impl SpcialFrame {
         frame: &[u8],
         dir: u8,
         sub_result: &mut Vec<Value>,
-        start_pos: usize,
+        _start_pos: usize,
         protocol: &str,
         region: &str,
     ) -> Result<(), Box<dyn Error>> {
@@ -189,9 +188,8 @@ impl SpcialFrame {
                     AnalysicErr::ErrLength => break,
                     _ => {}
                 },
-                Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
+                Err(_e) => {
+                    error!("数据解析失败!");
                     break;
                 }
             }

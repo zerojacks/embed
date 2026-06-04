@@ -445,7 +445,7 @@ impl FrameFun {
         data.iter().map(|&b| format!("{:02X}", b)).collect()
     }
 
-    pub fn get_data_normal_reverser(data: &[u8], need_delete: bool, need_reverse: bool) -> String {
+    pub fn get_data_normal_reverser(data: &[u8], need_delete: bool, _need_reverse: bool) -> String {
         if need_delete {
             Self::get_data_str_delete_33h_reverse(data)
         } else {
@@ -618,7 +618,7 @@ impl FrameFun {
             .filter_map(
                 |(
                     idx,
-                    (subitem, (subitem_content, subitem_content2, subitem_value, subitem_indices)),
+                    (subitem, (subitem_content, _subitem_content2, subitem_value, subitem_indices)),
                 )| {
                     if subitem == target_subitem_name {
                         Some((
@@ -651,9 +651,9 @@ impl FrameFun {
     pub fn get_subitem_length(
         data_subitem_elem: &Value,
         splitlength: &HashMap<String, (String, String, u32, Vec<usize>)>,
-        key: &str,
+        _key: &str,
         data_segment: &[u8],
-        protocol: &str,
+        _protocol: &str,
     ) -> (u32, u32) {
         let relues = data_subitem_elem.get("lengthrule").and_then(|v| v.as_str());
         let operator_mapping = HashMap::from([('+', '+'), ('-', '-'), ('*', '*'), ('/', '/')]);
@@ -664,7 +664,7 @@ impl FrameFun {
                 .captures(relues)
                 .and_then(|caps| caps.get(1).map(|m| m.as_str()))
             {
-                if let Some((value, index, subitem)) =
+                if let Some((_value, index, subitem)) =
                     Self::get_sublength_caculate_base(splitlength, match_string)
                 {
                     // Get the previous key if it exists

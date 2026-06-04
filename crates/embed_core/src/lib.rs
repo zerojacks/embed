@@ -1,8 +1,9 @@
 //! Lightweight shared crate for basefunc + config usable by both tauri and wasm
 
+#[cfg(feature = "wasm")]
 use std::collections::HashMap;
+#[cfg(feature = "wasm")]
 use futures::future::join_all;
-use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;

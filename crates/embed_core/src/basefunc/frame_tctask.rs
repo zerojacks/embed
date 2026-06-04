@@ -94,7 +94,6 @@ impl TCMeterTask {
         );
 
         let mut item_data: Vec<Value> = Vec::new();
-        let dis_data_identifier: String;
         let pos:usize = 0;
         if let Some(mut data_item_elem) = data_item_elem {
             // 上行回复
@@ -208,7 +207,7 @@ impl TCMeterTask {
                 pos += 1;
                 let mut ms_result = vec![];
                 for i in 0..task_content[0] {
-                    let range_type = Self::get_range_type(task_content[pos]);
+                    let _range_type = Self::get_range_type(task_content[pos]);
                     let spot_id = FrameFun::cosem_bin2_int32u(&task_content[pos..pos + 2]);
                     let dis_data_identifier = format!("测量点号:{:04}", spot_id);
                     FrameFun::add_data(

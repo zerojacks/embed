@@ -33,30 +33,30 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         index: usize,
-        region: &str,
+        _region: &str,
     ) -> usize {
         if frame.len() < 12 {
             return 0;
         }
         
-        let (mut updated_index, dir) = Self::analysic_head_frame(frame, result_list, index);
+        let (mut updated_index, _dir) = Self::analysic_head_frame(frame, result_list, index);
         let data_content = &frame[updated_index..];
         updated_index += index;
         let afn = frame[8];
-        let protocol = ProtocolInfo::ProtocolDLT64507.name().to_string();
+        let _protocol = ProtocolInfo::ProtocolDLT64507.name().to_string();
 
         if afn == 0x11 {
             // 下行读取报文
-            Self::analysic_read_frame(data_content, result_list, updated_index, &protocol, region, dir);
+            Self::analysic_read_frame(data_content, result_list, updated_index, &_protocol, _region, _dir);
         } else if afn == 0x91 || afn == 0xB1 {
             // 读取回复正常
             Self::analysic_read_response_frame(
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if matches!(afn, 0xD1 | 0xD2 | 0xD4 | 0xD6 | 0xD7 | 0xD9 | 0xDA | 0xDB) {
             // 异常应答
@@ -64,9 +64,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x12 {
             // 读取后续帧下行报文
@@ -74,9 +74,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x92 || afn == 0xB2 {
             // 读取后续帧回复报文
@@ -84,22 +84,22 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x14 {
             // 写数据
-            Self::analysic_write_frame(data_content, result_list, updated_index, &protocol, region, dir);
+            Self::analysic_write_frame(data_content, result_list, updated_index, &_protocol, _region, _dir);
         } else if afn == 0x93 {
             // 读通信地址正常应答
             Self::analysic_read_address_frame(
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x15 {
             // 写数据
@@ -107,18 +107,18 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x08 {
             Self::analysic_broadcast_time_frame(
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x16 {
             // 冻结命令
@@ -126,9 +126,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x17 || afn == 0x97 {
             // 更改通信速率
@@ -136,9 +136,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x18 {
             // 更改密码
@@ -146,9 +146,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x98 {
             // 修改密码应答
@@ -156,9 +156,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x19 {
             // 最大需量清零
@@ -166,9 +166,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x1A {
             // 电表清零
@@ -176,9 +176,9 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else if afn == 0x1B {
             // 事件清零
@@ -186,12 +186,12 @@ impl Frame645 {
                 data_content,
                 result_list,
                 updated_index,
-                &protocol,
-                region,
-                dir,
+                &_protocol,
+                _region,
+                _dir,
             );
         } else {
-            Self::analysic_invalid_frame(data_content, result_list, updated_index, &protocol, region, dir);
+            Self::analysic_invalid_frame(data_content, result_list, updated_index, &_protocol, _region, _dir);
         }
         Self::analysic_end_frame(data_content, result_list, updated_index);
         updated_index
@@ -401,9 +401,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let length = frame.len();
         let data_identifier = &frame[10..14];
@@ -414,7 +414,7 @@ impl Frame645 {
 
         let mut data_list: Vec<Value> = Vec::new();
         if let Some(data_item) =
-            ProtocolConfigManager::get_config_xml(&data_item_str, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_item_str, _protocol, _region, Some(_dir))
         {
             let name_text = data_item.get_child_text("name");
             let data_identifier_str = if let Some(name_text) = name_text {
@@ -507,9 +507,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let mut data_list = Vec::new();
         let data_identifier = &frame[10..14];
@@ -518,7 +518,7 @@ impl Frame645 {
         let mut pos = 0;
         let data_item_str = FrameFun::get_data_str_delete_33h_reverse(data_identifier);
         if let Some(mut data_item_elem) =
-            ProtocolConfigManager::get_config_xml(&data_item_str, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_item_str, _protocol, _region, Some(_dir))
         {
             let mut sub_result: Vec<Value> = Vec::new();
             let sublength_ele = data_item_elem.get_child_text("length");
@@ -528,18 +528,18 @@ impl Frame645 {
                     FrameCsg::calculate_item_length(
                         &mut data_item_elem,
                         data_content,
-                        protocol,
-                        region,
-                        Some(dir),
+                        _protocol,
+                        _region,
+                        Some(_dir),
                         None,
                     )
                 } else {
                     let (sub_length, _new_datament) = FrameCsg::recalculate_sub_length(
                         &mut data_item_elem,
                         data_content,
-                        protocol,
-                        region,
-                        Some(dir),
+                        _protocol,
+                        _region,
+                        Some(_dir),
                     );
                     sub_length
                 }
@@ -571,11 +571,11 @@ impl Frame645 {
             while pos + sublength <= all_length {
                 let alalysic_result = FrameAnalisyic::prase_data(
                     &mut data_item_elem,
-                    protocol,
-                    region,
+                    _protocol,
+                    _region,
                     &data_content[pos..pos + sublength],
                     14 + pos,
-                    Some(dir),
+                    Some(_dir),
                 );
                 pos += sublength;
                 let child_result = Self::process_data_list(&alalysic_result);
@@ -709,9 +709,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let data_identifier = &frame[10..14];
         let _data_length = frame[9];
@@ -721,7 +721,7 @@ impl Frame645 {
 
         let mut data_list = Vec::new();
         if let Some(data_item) =
-            ProtocolConfigManager::get_config_xml(&data_identifier_str, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_identifier_str, _protocol, _region, Some(_dir))
         {
             let name_ele = data_item.get_child_text("name");
             let data_identifier_str = if let Some(name) = name_ele {
@@ -776,9 +776,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let mut data_list = Vec::new();
         let data_identifier = &frame[10..14];
@@ -788,7 +788,7 @@ impl Frame645 {
         let data_identifier_str = FrameFun::get_data_str_delete_33h_reverse(data_identifier);
 
         if let Some(mut data_item_elem) =
-            ProtocolConfigManager::get_config_xml(&data_identifier_str, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_identifier_str, _protocol, _region, Some(_dir))
         {
             let name_ele = data_item_elem.get_child_text("name");
             let data_item_str = if let Some(name) = name_ele {
@@ -799,11 +799,11 @@ impl Frame645 {
 
             let sub_result = FrameAnalisyic::prase_data(
                 &mut data_item_elem,
-                protocol,
-                region,
+                _protocol,
+                _region,
                 data_content,
                 indx + 14,
-                Some(dir),
+                Some(_dir),
             );
 
             FrameFun::add_data(
@@ -877,9 +877,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let data_identifier = &frame[10..14];
         let _data_length = frame[9];
@@ -892,7 +892,7 @@ impl Frame645 {
         let mut data_list = Vec::new();
 
         if let Some(mut data_item) =
-            ProtocolConfigManager::get_config_xml(&item_str, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&item_str, _protocol, _region, Some(_dir))
         {
             let name_ele = data_item.get_child_text("name");
             let data_identifier_str = if let Some(name) = name_ele {
@@ -946,11 +946,11 @@ impl Frame645 {
             );
             let write_result = FrameAnalisyic::prase_data(
                 &mut data_item,
-                protocol,
-                region,
+                _protocol,
+                _region,
                 write_data,
                 22 + indx,
-                Some(dir),
+                Some(_dir),
             );
 
             FrameFun::add_data(
@@ -1055,9 +1055,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let address = &frame[10..16];
         let mut data_list = Vec::new();
@@ -1088,9 +1088,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let time = &frame[10..16];
         let mut data_list = Vec::new();
@@ -1122,9 +1122,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let time = &frame[10..14];
         let mut form_time = FrameFun::frame_delete_33h(time);
@@ -1159,9 +1159,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let communication_rate = frame[10];
         let mut data_list = Vec::new();
@@ -1216,9 +1216,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let item = &frame[10..14];
         let original_password = &frame[14..18];
@@ -1288,9 +1288,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let new_password = &frame[10..14];
         let mut sub_result = Vec::new();
@@ -1333,9 +1333,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let password = &frame[10..14];
         let operator = &frame[14..18];
@@ -1391,9 +1391,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let password = &frame[10..14];
         let operator = &frame[14..18];
@@ -1449,9 +1449,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let password = &frame[10..14];
         let operator = &frame[14..18];
@@ -1526,9 +1526,9 @@ impl Frame645 {
         frame: &[u8],
         result_list: &mut Vec<Value>,
         indx: usize,
-        protocol: &str,
-        region: &str,
-        dir: u8,
+        _protocol: &str,
+        _region: &str,
+        _dir: u8,
     ) {
         let mut data_list = Vec::new();
         let length = frame.len();

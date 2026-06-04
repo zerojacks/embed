@@ -56,7 +56,7 @@ impl FrameAnalisyic {
             }
         } else if Frame645::is_dlt645_frame(frame) {
             protocol = ProtocolInfo::ProtocolDLT64507.name().to_string();
-            let result = Frame645::analysic_645_frame_by_afn(frame, &mut parsed_data, 0, region);
+            let _result = Frame645::analysic_645_frame_by_afn(frame, &mut parsed_data, 0, region);
         } else if FrameCCO::is_cco_frame(frame) {
             protocol = ProtocolInfo::ProtocolCSG16.name().to_string();
             FrameCCO::analysic_cco_frame_by_afn(frame, &mut parsed_data, 0, region);
@@ -86,7 +86,7 @@ impl FrameAnalisyic {
         protocol: &str,
         region: &str,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         dir: Option<u8>,
     ) -> Vec<Value> {
         // 根据xml配置解析数据
@@ -102,7 +102,7 @@ impl FrameAnalisyic {
         parsed_data = Self::prase_data_item(
             data_item_elem,
             data_segment,
-            index,
+            _index,
             need_delete,
             protocol,
             region,
@@ -113,7 +113,7 @@ impl FrameAnalisyic {
     pub fn prase_data_item(
         data_item_elem: &mut XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -130,7 +130,6 @@ impl FrameAnalisyic {
 
         let sub_data_item = data_item_elem.get_items("dataItem");
         let sub_data_segment = data_segment;
-        let mut pos: usize;
         let sub_item_result: Option<Vec<Value>>;
         let mut cur_length = data_segment.len();
         let mut color: Option<String> = None;
@@ -152,7 +151,7 @@ impl FrameAnalisyic {
             let (sub_result, length) = Self::process_all_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -170,7 +169,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length, cur_color) = Self::prase_value_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -184,7 +183,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length) = Self::prase_singal_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -197,7 +196,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length, cur_color) = Self::prase_value_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -211,7 +210,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length) = Self::prase_time_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -224,7 +223,7 @@ impl FrameAnalisyic {
             let (sub_result, length) = Self::parse_bitwise_data(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -236,7 +235,7 @@ impl FrameAnalisyic {
             let (sub_result, length) = Self::prase_split_by_length_item(
                 &data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -248,7 +247,7 @@ impl FrameAnalisyic {
             let (sub_result, length) = Self::prase_item_box(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -264,7 +263,7 @@ impl FrameAnalisyic {
                 let sub_result = Self::prase_data_item(
                     &mut length_elem.clone(),
                     data_segment,
-                    index,
+                    _index,
                     need_delete,
                     protocol,
                     region,
@@ -313,7 +312,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length) = Self::prase_type_item(
                 &data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 subitem_length,
                 protocol,
@@ -327,7 +326,7 @@ impl FrameAnalisyic {
             let (cur_result, sub_result, length) = Self::prase_singal_item(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -342,7 +341,7 @@ impl FrameAnalisyic {
             item_name,
             FrameFun::get_data_str(&data_segment, false, false, false),
             result_str,
-            vec![index, index + cur_length],
+            vec![_index, _index + cur_length],
             sub_item_result,
             color,
         );
@@ -353,7 +352,7 @@ impl FrameAnalisyic {
     pub fn process_all_item(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -365,10 +364,8 @@ impl FrameAnalisyic {
         if data_segment.is_empty() {
             return (sub_item_result, total_length);
         }
-        let data_item_id = data_item_elem.get_attribute("id");
-        let data_item_name = data_item_elem.get_child_text("name");
-
-        let color: Option<String> = None;
+        let _data_item_id = data_item_elem.get_attribute("id");
+        let _data_item_name = data_item_elem.get_child_text("name");
 
         let sub_data_item = data_item_elem.get_items("dataItem");
         let mut sub_data_segment = data_segment;
@@ -397,7 +394,7 @@ impl FrameAnalisyic {
                 let cur_result = Self::prase_data_item(
                     &mut data_item.clone(),
                     &sub_item_data,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -419,7 +416,7 @@ impl FrameAnalisyic {
                 //     FrameFun::get_data_str(&sub_item_data, false, false, true),
                 //     FrameFun::get_data_str(&sub_item_data, false, false, false),
                 //     description, // Pass ownership of String
-                //     vec![index + pos, index + pos + sub_item_length],
+                //     vec![_index + pos, _index + pos + sub_item_length],
                 //     Some(cur_result), // Wrap Vec<Value> in Some
                 //     color.clone() // Clone the color option
                 // );
@@ -437,7 +434,7 @@ impl FrameAnalisyic {
     pub fn prase_value_item(
         data_item_elem: &mut XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -470,7 +467,7 @@ impl FrameAnalisyic {
         let (parse_value, sub_item_result, _len) = Self::prase_singal_item(
             data_item_elem,
             data_segment,
-            index,
+            _index,
             need_delete,
             protocol,
             region,
@@ -499,7 +496,7 @@ impl FrameAnalisyic {
 
         // 获取所有 `value` 子元素
         let value_elements = data_item_elem.get_items("value");
-        let (value_str, element) = Self::find_value_from_elements(&value_elements, &value);
+        let (value_str, _element) = Self::find_value_from_elements(&value_elements, &value);
 
         value_name = if value_str.is_none() {
             format!("[{}]: {}", value_name, parse_value.clone())
@@ -519,7 +516,7 @@ impl FrameAnalisyic {
     }
 
     /// 智能检测占位符模式
-    /// 支持多种占位符格式：{index}, {num}, {id}, {n}, 等
+    /// 支持多种占位符格式：{_index}, {num}, {id}, {n}, 等
     pub fn detect_placeholder_pattern(pattern: &str) -> Vec<String> {
         let re = Regex::new(r"\{([^}]+)\}").unwrap();
         re.captures_iter(pattern)
@@ -541,7 +538,7 @@ impl FrameAnalisyic {
 
             // 根据占位符名称决定替换值
             let replacement = match placeholder.to_lowercase().as_str() {
-                "index" | "idx" | "i" => index_value.to_string(),
+                "_index" | "idx" | "i" => index_value.to_string(),
                 "num" | "number" | "n" => index_value.to_string(),
                 "id" => index_value.to_string(),
                 "count" | "cnt" | "c" => index_value.to_string(),
@@ -571,7 +568,7 @@ impl FrameAnalisyic {
     }
 
     /// 计算占位符表达式
-    /// 支持简单的数学运算，如 {index+1}, {n-1}, {i*2} 等
+    /// 支持简单的数学运算，如 {_index+1}, {n-1}, {i*2} 等
     fn evaluate_placeholder_expression(expression: &str, index_value: usize) -> String {
         // 简单的表达式解析器
         if let Some(pos) = expression.find('+') {
@@ -647,7 +644,7 @@ impl FrameAnalisyic {
     pub fn prase_singal_item(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -655,7 +652,7 @@ impl FrameAnalisyic {
     ) -> (String, Option<Vec<Value>>, usize) {
         let sub_item_result: Option<Vec<Value>>;
 
-        let subitem_name = data_item_elem.get_child_text("name").unwrap_or_default();
+        let _subitem_name = data_item_elem.get_child_text("name").unwrap_or_default();
         let splitbit_elem = data_item_elem.get_child("splitbit");
 
         let mut subitem_value = String::new();
@@ -666,7 +663,7 @@ impl FrameAnalisyic {
             let subitem_value_option = Self::prase_simple_type_data(
                 data_item_elem,
                 data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -719,7 +716,7 @@ impl FrameAnalisyic {
             let (result, length) = Self::parse_bitwise_data(
                 &splitbit_elem,
                 data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -742,7 +739,7 @@ impl FrameAnalisyic {
             let ret = Self::prase_simple_type_data(
                 data_item_elem,
                 data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -765,7 +762,7 @@ impl FrameAnalisyic {
     pub fn prase_simple_type_data(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         _protocol: &str,
         _region: &str,
@@ -805,7 +802,7 @@ impl FrameAnalisyic {
     pub fn parse_bitwise_data(
         splitbit_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         _protocol: &str,
         _region: &str,
@@ -868,7 +865,7 @@ impl FrameAnalisyic {
                     bit_id_attr,
                     bit_value,
                     description,
-                    vec![index + start_pos, index + end_pos],
+                    vec![_index + start_pos, _index + end_pos],
                     None,
                     coclor, // Assuming you want `None` here
                 );
@@ -885,7 +882,7 @@ impl FrameAnalisyic {
                 let offset = bitpattern.get_attribute("offset");
                 info!("bit type {:?} offset {:?}", bit_type, offset);
                 if let Some(bit_type) = bit_type {
-                    if bit_type.to_lowercase() == "index" {
+                    if bit_type.to_lowercase() == "_index" {
                         // 智能解析offset，支持数值和字符串
                         let offset_value = if let Some(offset_str) = offset.as_deref() {
                             // 尝试直接解析为数字
@@ -899,7 +896,7 @@ impl FrameAnalisyic {
 
                         let pattern_name = bitpattern
                             .get_child_text("name")
-                            .unwrap_or("bit{index}".to_string());
+                            .unwrap_or("bit{_index}".to_string());
                         let value_elements = bitpattern.get_items("value");
 
                         // 智能检测占位符模式
@@ -951,7 +948,7 @@ impl FrameAnalisyic {
                                     bit_id_attr,
                                     bit_value_str,
                                     description,
-                                    vec![index + byte_index, index + byte_index + 1],
+                                    vec![_index + byte_index, _index + byte_index + 1],
                                     None,
                                     color,
                                 );
@@ -1027,7 +1024,7 @@ impl FrameAnalisyic {
     pub fn prase_split_by_length_item(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -1057,7 +1054,7 @@ impl FrameAnalisyic {
             let (sub_result, _length) = Self::parse_bitwise_data(
                 data_item_elem,
                 sub_data_segment,
-                index,
+                _index,
                 need_delete,
                 protocol,
                 region,
@@ -1070,7 +1067,7 @@ impl FrameAnalisyic {
                 item_name,
                 FrameFun::get_data_str(&data_segment, false, false, true),
                 FrameFun::get_data_str(&data_segment, false, false, false),
-                vec![index, index + data_segment.len()],
+                vec![_index, _index + data_segment.len()],
                 sub_item_result.clone(),
                 color.clone(), // Assuming you want `None` here
             );
@@ -1133,7 +1130,7 @@ impl FrameAnalisyic {
                 let (cur_result, sub_result, length, cur_color) = Self::prase_value_item(
                     &mut splitlength_item.clone(),
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1147,7 +1144,7 @@ impl FrameAnalisyic {
                 let (mut cur_result, sub_result, length) = Self::prase_singal_item(
                     &splitlength_item,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1167,7 +1164,7 @@ impl FrameAnalisyic {
                 let (cur_result, sub_result, length, cur_color) = Self::prase_value_item(
                     &mut splitlength_item.clone(),
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1181,7 +1178,7 @@ impl FrameAnalisyic {
                 let (mut cur_result, sub_result, length) = Self::prase_time_item(
                     &splitlength_item,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1198,7 +1195,7 @@ impl FrameAnalisyic {
                 let (sub_result, length) = Self::parse_bitwise_data(
                     &split_elem,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1211,7 +1208,7 @@ impl FrameAnalisyic {
                 let (sub_result, length) = Self::prase_split_by_length_item(
                     &splitlength_item,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1224,7 +1221,7 @@ impl FrameAnalisyic {
                 let (mut cur_result, sub_result, length) = Self::prase_type_item(
                     &mut splitlength_item.clone(),
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     subitem_length,
                     protocol,
@@ -1241,7 +1238,7 @@ impl FrameAnalisyic {
                 let (sub_result, length) = Self::prase_item_box(
                     &splitlength_item,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1254,7 +1251,7 @@ impl FrameAnalisyic {
                 let (mut cur_result, sub_result, length) = Self::prase_singal_item(
                     &splitlength_item,
                     subitem_content,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1276,7 +1273,7 @@ impl FrameAnalisyic {
                     sub_neme,
                     FrameFun::get_data_str(&subitem_content, false, false, true),
                     result_str,
-                    vec![index + pos, index + pos + subitem_length],
+                    vec![_index + pos, _index + pos + subitem_length],
                     sub_item_result.clone(),
                     color.clone(),
                 );
@@ -1296,7 +1293,7 @@ impl FrameAnalisyic {
                     sub_neme,
                     FrameFun::get_data_str(&subitem_content, false, false, true),
                     description,
-                    vec![index + pos, index + pos + subitem_length],
+                    vec![_index + pos, _index + pos + subitem_length],
                     sub_item_result,
                     color.clone(),
                 );
@@ -1311,7 +1308,7 @@ impl FrameAnalisyic {
     pub fn prase_item_box(
         data_item_elem: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         protocol: &str,
         region: &str,
@@ -1357,7 +1354,7 @@ impl FrameAnalisyic {
                     result = Self::prase_data_item(
                         &mut item_element,
                         item_data,
-                        index + pos,
+                        _index + pos,
                         need_delete,
                         protocol,
                         region,
@@ -1376,7 +1373,7 @@ impl FrameAnalisyic {
                 //     item_result_name,
                 //     FrameFun::get_data_str(&subitem_content, false, false, true),
                 //     FrameFun::get_data_str(&subitem_content, false, false, false),
-                //     vec![index + pos , index + pos + cur_length],
+                //     vec![_index + pos , _index + pos + cur_length],
                 //     Some(result),
                 //     None
                 // );
@@ -1419,7 +1416,7 @@ impl FrameAnalisyic {
     pub fn prase_type_item(
         item_element: &XmlElement,
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         need_delete: bool,
         singal_length: usize,
         protocol: &str,
@@ -1457,7 +1454,7 @@ impl FrameAnalisyic {
         if let Some(parsed_value) = Self::prase_simple_type_data(
             &item_element,
             &data_segment,
-            index,
+            _index,
             need_delete,
             protocol,
             region,
@@ -1469,7 +1466,7 @@ impl FrameAnalisyic {
                 "PN" => {
                     let result_vec = Self::prase_pn_type(
                         &data_content,
-                        index,
+                        _index,
                         singal_length as usize,
                         protocol,
                         region,
@@ -1480,7 +1477,7 @@ impl FrameAnalisyic {
                 "ITEM" => {
                     let result_vec = Self::prase_item_type(
                         &data_content,
-                        index,
+                        _index,
                         singal_length as usize,
                         protocol,
                         region,
@@ -1493,7 +1490,7 @@ impl FrameAnalisyic {
                     Frame645::analysic_645_frame_by_afn(
                         &data_content,
                         &mut result_vec,
-                        index,
+                        _index,
                         region,
                     );
                     info!("645 analysic {:?}", result_vec);
@@ -1504,7 +1501,7 @@ impl FrameAnalisyic {
                     match FrameCsg::analysic_csg_frame_by_afn(
                         &data_content,
                         &mut result_vec,
-                        index,
+                        _index,
                         region,
                     ) {
                         Ok(_) => {}
@@ -1517,7 +1514,7 @@ impl FrameAnalisyic {
                 "IPWITHPORT" => {
                     let result_vec = Self::prase_ip_and_port(
                         &data_content,
-                        index,
+                        _index,
                         singal_length as usize,
                         protocol,
                         region,
@@ -1539,7 +1536,7 @@ impl FrameAnalisyic {
                             &data_content,
                             singal_length as usize,
                             need_delete,
-                            index,
+                            _index,
                             protocol,
                             region,
                             dir,
@@ -1552,7 +1549,7 @@ impl FrameAnalisyic {
                         let (cur_result, sub_result, length) = Self::prase_singal_item(
                             &item_element,
                             &data_content,
-                            index,
+                            _index,
                             need_delete,
                             protocol,
                             region,
@@ -1570,7 +1567,7 @@ impl FrameAnalisyic {
 
     pub fn prase_pn_type(
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         item_len: usize,
         _protocol: &str,
         _region: &str,
@@ -1590,7 +1587,7 @@ impl FrameAnalisyic {
                     item_name,
                     FrameFun::get_data_str(&sub_data, false, false, true),
                     item_value,
-                    vec![index + pos, index + pos + length],
+                    vec![_index + pos, _index + pos + length],
                     None,
                     None,
                 );
@@ -1605,7 +1602,7 @@ impl FrameAnalisyic {
                 item_name,
                 FrameFun::get_data_str(&data_segment, false, false, true),
                 FrameFun::get_data_str(&data_segment, false, false, false),
-                vec![index + pos, index + pos + item_len],
+                vec![_index + pos, _index + pos + item_len],
                 None,
                 None,
             );
@@ -1643,7 +1640,7 @@ impl FrameAnalisyic {
 
     pub fn prase_item_type(
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         item_len: usize,
         protocol: &str,
         region: &str,
@@ -1673,7 +1670,7 @@ impl FrameAnalisyic {
                     item_name,
                     FrameFun::get_data_str(&sub_data, false, false, true),
                     item_description,
-                    vec![index + pos, index + pos + length],
+                    vec![_index + pos, _index + pos + length],
                     None,
                     None,
                 );
@@ -1687,7 +1684,7 @@ impl FrameAnalisyic {
                 item_name,
                 FrameFun::get_data_str(&data_segment, false, false, true),
                 FrameFun::get_data_str(&data_segment, false, false, false),
-                vec![index + pos, index + pos + item_len],
+                vec![_index + pos, _index + pos + item_len],
                 None,
                 None,
             );
@@ -1698,7 +1695,7 @@ impl FrameAnalisyic {
 
     pub fn prase_ip_and_port(
         data_segment: &[u8],
-        index: usize,
+        _index: usize,
         _item_len: usize,
         _protocol: &str,
         _region: &str,
@@ -1715,7 +1712,7 @@ impl FrameAnalisyic {
             "IP地址".to_string(),
             FrameFun::get_data_str(&data_segment[2..], false, false, true),
             ip_str,
-            vec![index + 2, index + 2 + 8],
+            vec![_index + 2, _index + 2 + 8],
             None,
             None,
         );
@@ -1724,7 +1721,7 @@ impl FrameAnalisyic {
             "端口号".to_string(),
             FrameFun::get_data_str(&port, false, false, true),
             port_str,
-            vec![index, index + 2],
+            vec![_index, _index + 2],
             None,
             None,
         );
@@ -1737,7 +1734,7 @@ impl FrameAnalisyic {
         data_segment: &[u8],
         item_len: usize,
         need_delete: bool,
-        index: usize,
+        _index: usize,
         protocol: &str,
         region: &str,
         dir: Option<u8>,
@@ -1792,7 +1789,7 @@ impl FrameAnalisyic {
             .map(|s| {
                 // Check if the string contains format specifiers like %d
                 if s.contains('%') {
-                    // Try to format the string with the current index
+                    // Try to format the string with the current _index
                     match format!("{}", s).replace("%d", &(i + 1).to_string()) {
                         formatted if formatted != *s => formatted,
                         _ => format!("第{}组{}", i + 1, s), // Fall back to the original format if formatting failed
@@ -1819,7 +1816,7 @@ impl FrameAnalisyic {
                     .map(|s| {
                         // Check if the string contains format specifiers like %d
                         if s.contains('%') {
-                            // Try to format the string with the current index
+                            // Try to format the string with the current _index
                             match format!("{}", s).replace("%d", &(i + 1).to_string()) {
                                 formatted if formatted != *s => formatted,
                                 _ => format!("第{}组{}", i + 1, s), // Fall back to the original format if formatting failed
@@ -1834,7 +1831,7 @@ impl FrameAnalisyic {
                 let item_value = Self::prase_data_item(
                     &mut item_element_clone,
                     sub_data,
-                    index + pos,
+                    _index + pos,
                     need_delete,
                     protocol,
                     region,
@@ -1899,7 +1896,7 @@ impl FrameAnalisyic {
                             item_name,
                             FrameFun::get_data_str(&sub_data, false, false, true),
                             item_description,
-                            vec![index + pos, index + pos + subitem_length],
+                            vec![_index + pos, _index + pos + subitem_length],
                             Some(item_value),
                             None,
                         );
@@ -1914,7 +1911,7 @@ impl FrameAnalisyic {
                 template_name,
                 FrameFun::get_data_str(&data_segment, false, false, true),
                 all_data_str.clone(),
-                vec![index, index + item_len],
+                vec![_index, _index + item_len],
                 None,
                 None,
             );

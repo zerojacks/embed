@@ -19,9 +19,9 @@ impl FrameMoudle {
         }
         let length = FrameFun::bintodecimal(&frame[1..3]);
         let bit_array = FrameFun::get_bit_array(frame[3]);
-        let dir = bit_array[0];
-        let prm = bit_array[1];
-        let add = bit_array[2];
+        let _dir = bit_array[0];
+        let _prm = bit_array[1];
+        let _add = bit_array[2];
         if frame.len() < 10 {
             return false;
         }
@@ -39,7 +39,7 @@ impl FrameMoudle {
         index: usize,
         region: &str,
     ) {
-        let (dir, prm, add, afn, pos, mut user_result) =
+        let (_dir, _prm, _add, _afn, pos, mut user_result) =
             Self::analysic_moudle_head_frame(frame, result_list, index);
 
         let app_data = &frame[pos..frame.len() - 2];
@@ -48,7 +48,7 @@ impl FrameMoudle {
         Self::analysic_moudle_appdata_frame(
             app_data,
             &mut app_data_result,
-            dir,
+            _dir,
             index + pos,
             &protocol,
             region,
@@ -79,7 +79,7 @@ impl FrameMoudle {
             None,
         );
 
-        Self::analysic_moudle_end_frame(frame, result_list, dir, index);
+        Self::analysic_moudle_end_frame(frame, result_list, _dir, index);
     }
 
     fn analysic_moudle_head_frame(
@@ -115,7 +115,7 @@ impl FrameMoudle {
         );
 
         let mut contro_result = Vec::new();
-        let (dir, prm, add, ver) =
+        let (_dir, _prm, _add, _ver) =
             Self::get_control_code_str(control_data, &mut contro_result, index + 3);
 
         FrameFun::add_data(
@@ -131,7 +131,7 @@ impl FrameMoudle {
         let mut user_result = Vec::new();
 
         let afn = frame[pos];
-        let dir_type = frame[pos + 5];
+        let _dir_type = frame[pos + 5];
         let item_data = frame[6..10].to_vec();
         let item = FrameFun::bintodecimal(&item_data);
         let afn_str = Self::get_afn_info(afn, item);
@@ -160,7 +160,7 @@ impl FrameMoudle {
         );
 
         pos += 1;
-        (dir, prm, add, afn, pos, user_result)
+        (_dir, _prm, _add, afn, pos, user_result)
     }
 
     pub fn get_afn_info(afn: u8, item: u64) -> &'static str {
@@ -195,29 +195,29 @@ impl FrameMoudle {
         index: usize,
     ) -> (u8, u8, u8, u8) {
         let bit_array = FrameFun::get_bit_array(control_data);
-        let dir = bit_array[0];
-        let prm = bit_array[1];
-        let add = bit_array[2];
+        let _dir = bit_array[0];
+        let _prm = bit_array[1];
+        let _add = bit_array[2];
         let ver = control_data & 0x0c;
         let keep = control_data & 0x03;
 
-        let dir_str = if dir == 0 {
+        let dir_str = if _dir == 0 {
             "下行报文"
         } else {
             "上行报文"
         };
-        let prm_str = if prm == 1 {
+        let prm_str = if _prm == 1 {
             "表示此帧报文来自启动站"
         } else {
             "表示此帧报文来自从动站"
         };
-        let add_str = if add == 1 { "保留" } else { "保留" };
+        let add_str = if _add == 1 { "保留" } else { "保留" };
         let ver_str = format!("协议版本号:{}", ver);
 
         FrameFun::add_data(
             control_result,
             "传输方向位DIR".to_string(),
-            dir.to_string(),
+            _dir.to_string(),
             dir_str.to_string(),
             vec![index + 0, index + 1],
             None,
@@ -226,7 +226,7 @@ impl FrameMoudle {
         FrameFun::add_data(
             control_result,
             "启动标志位PRM".to_string(),
-            prm.to_string(),
+            _prm.to_string(),
             prm_str.to_string(),
             vec![index + 0, index + 1],
             None,
@@ -235,7 +235,7 @@ impl FrameMoudle {
         FrameFun::add_data(
             control_result,
             "保留".to_string(),
-            add.to_string(),
+            _add.to_string(),
             add_str.to_string(),
             vec![index + 0, index + 1],
             None,
@@ -260,13 +260,13 @@ impl FrameMoudle {
             None,
         );
 
-        (dir, prm, add, ver)
+        (_dir, _prm, _add, ver)
     }
 
     fn analysic_moudle_appdata_frame(
         data_content: &[u8],
         result: &mut Vec<Value>,
-        dir: u8,
+        _dir: u8,
         index: usize,
         protocol: &str,
         region: &str,
@@ -275,11 +275,11 @@ impl FrameMoudle {
         let di_data = &data_content[4..];
         let data_item = FrameFun::get_data_str_reverser(di);
         info!(
-            "data_item: {} protocol: {} region: {} dir: {}",
-            data_item, protocol, region, dir
+            "data_item: {} protocol: {} region: {} _dir: {}",
+            data_item, protocol, region, _dir
         );
         if let Some(mut data_item_elem) =
-            ProtocolConfigManager::get_config_xml(&data_item, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_item, protocol, region, Some(_dir))
         {
             let pos: usize = 0;
             let length_ele = data_item_elem.get_child_text("length");
@@ -295,7 +295,7 @@ impl FrameMoudle {
                         di_data,
                         protocol,
                         region,
-                        Some(dir),
+                        Some(_dir),
                         None,
                     ),
                     _ => length_text.parse::<usize>().unwrap_or(0),
@@ -312,7 +312,7 @@ impl FrameMoudle {
                 region,
                 sub_datament,
                 index + pos + 4,
-                Some(dir),
+                Some(_dir),
             );
 
             let name = data_item_elem.get_child_text("name");

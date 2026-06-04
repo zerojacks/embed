@@ -177,7 +177,7 @@ impl TaskOadConfigManager {
                 return None;
             }
             let sub_config = sub_config.unwrap();
-            for (list_name, items) in &sub_config.lists {
+            for (_list_name, items) in &sub_config.lists {
                 for item in items {
                     if item.v_oad.to_lowercase() == v_oad.to_lowercase() {
                         return Some(item.clone());

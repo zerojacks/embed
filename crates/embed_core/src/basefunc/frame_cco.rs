@@ -3,7 +3,6 @@ use crate::basefunc::frame_fun::FrameFun;
 use crate::basefunc::protocol::{FrameAnalisyic, ProtocolInfo};
 use crate::config::xmlconfig::ProtocolConfigManager;
 use serde_json::Value;
-use tracing::info;
 const FRAME_START: u8 = 0x68;
 const FRAME_END: u8 = 0x16;
 
@@ -19,8 +18,8 @@ impl FrameCCO {
         }
         let length = FrameFun::bintodecimal(&frame[1..3]);
         let bit_array = FrameFun::get_bit_array(frame[3]);
-        let dir = bit_array[0];
-        let prm = bit_array[1];
+        let _dir = bit_array[0];
+        let _prm = bit_array[1];
         let add = bit_array[2];
         if add == 0 {
             if frame.len() < 10 {
@@ -41,18 +40,18 @@ impl FrameCCO {
         index: usize,
     ) -> (u8, u8, u8, u8) {
         let bit_array = FrameFun::get_bit_array(control_data);
-        let dir = bit_array[0];
-        let prm = bit_array[1];
+        let _dir = bit_array[0];
+        let _prm = bit_array[1];
         let add = bit_array[2];
         let ver = control_data & 0x0c;
         let keep = control_data & 0x03;
 
-        let dir_str = if dir == 0 {
+        let dir_str = if _dir == 0 {
             "下行报文"
         } else {
             "上行报文"
         };
-        let prm_str = if prm == 1 {
+        let prm_str = if _prm == 1 {
             "表示此帧报文来自启动站"
         } else {
             "表示此帧报文来自从动站"
@@ -67,7 +66,7 @@ impl FrameCCO {
         FrameFun::add_data(
             control_result,
             "传输方向位DIR".to_string(),
-            dir.to_string(),
+            _dir.to_string(),
             dir_str.to_string(),
             vec![index + 0, index + 1],
             None,
@@ -76,7 +75,7 @@ impl FrameCCO {
         FrameFun::add_data(
             control_result,
             "启动标志位PRM".to_string(),
-            prm.to_string(),
+            _prm.to_string(),
             prm_str.to_string(),
             vec![index + 0, index + 1],
             None,
@@ -110,12 +109,12 @@ impl FrameCCO {
             None,
         );
 
-        (dir, prm, add, ver)
+        (_dir, _prm, add, ver)
     }
 
     pub fn get_user_data_result(
         adress_area: &[u8],
-        add: u8,
+        _add: u8,
         result_list: &mut Vec<Value>,
         index: usize,
     ) {
@@ -180,7 +179,7 @@ impl FrameCCO {
         index: usize,
         region: &str,
     ) {
-        let (dir, prm, add, afn, pos, mut user_result) =
+        let (_dir, _prm, _add, _afn, pos, mut user_result) =
             Self::analysic_cco_head_frame(frame, result_list, index);
 
         let app_data = &frame[pos..frame.len() - 2];
@@ -189,7 +188,7 @@ impl FrameCCO {
         Self::analysic_cco_appdata_frame(
             app_data,
             &mut app_data_result,
-            dir,
+            _dir,
             index + pos,
             &protocol,
             region,
@@ -220,7 +219,7 @@ impl FrameCCO {
             None,
         );
 
-        Self::analysic_cco_end_frame(frame, result_list, dir, index);
+        Self::analysic_cco_end_frame(frame, result_list, _dir, index);
     }
 
     fn analysic_cco_head_frame(
@@ -256,7 +255,7 @@ impl FrameCCO {
         );
 
         let mut contro_result = Vec::new();
-        let (dir, prm, add, ver) =
+        let (_dir, _prm, add, _ver) =
             Self::get_control_code_str(control_data, &mut contro_result, index + 3);
 
         FrameFun::add_data(
@@ -291,7 +290,7 @@ impl FrameCCO {
 
         let afn = frame[pos];
         let dir_type = frame[pos + 5];
-        let afn_str = Self::get_afn_info(dir_type, prm, afn);
+        let afn_str = Self::get_afn_info(dir_type, _prm, afn);
 
         FrameFun::add_data(
             &mut user_result,
@@ -317,11 +316,11 @@ impl FrameCCO {
         );
 
         pos += 1;
-        (dir, prm, add, afn, pos, user_result)
+        (_dir, _prm, add, afn, pos, user_result)
     }
 
-    fn get_direction_str(dir: u8) -> &'static str {
-        match dir {
+    fn get_direction_str(_dir: u8) -> &'static str {
+        match _dir {
             0x00 => "上下行均用，但下行无数据内容",
             0x01 => "上下行均用，数据内容格式一致",
             0x02 => "仅下行用，上行为确认/否认报文",
@@ -396,7 +395,7 @@ impl FrameCCO {
     fn analysic_cco_appdata_frame(
         data_content: &[u8],
         result: &mut Vec<Value>,
-        dir: u8,
+        _dir: u8,
         index: usize,
         protocol: &str,
         region: &str,
@@ -410,7 +409,7 @@ impl FrameCCO {
         let data_item = FrameFun::get_data_str_reverser(di);
 
         if let Some(mut data_item_elem) =
-            ProtocolConfigManager::get_config_xml(&data_item, protocol, region, Some(dir))
+            ProtocolConfigManager::get_config_xml(&data_item, protocol, region, Some(_dir))
         {
             let pos: usize = 0;
 
@@ -423,7 +422,7 @@ impl FrameCCO {
                         di_data,
                         protocol,
                         region,
-                        Some(dir),
+                        Some(_dir),
                         None,
                     ),
                     _ => length_text.parse::<usize>().unwrap_or(0),
@@ -440,7 +439,7 @@ impl FrameCCO {
                 region,
                 sub_datament,
                 index + pos + 4,
-                Some(dir),
+                Some(_dir),
             );
 
             let name = data_item_elem.get_child_text("name");
