@@ -7,20 +7,6 @@ use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement};
 use serde_json::Value;
 use std::error::Error;
 use tracing::info;
-const MS_TYPE_ALL_USER: u8 = 0x01; //全部用户类型*/
-const MS_TYPE_A_SET_OF_USER: u8 = 0x02; //一组用户类型 */
-const MS_TYPE_A_SET_OF_ADDRESSES: u8 = 0x03; //一组用户地址*/
-const MS_TYPE_A_SET_OF_NUMBERS: u8 = 0x04; //一组配置序号*/
-const MS_TYPE_A_RANGE_OF_USER_TYPES: u8 = 0x05; //一组用户类型区间*/
-const MS_TYPE_A_SET_OF_USER_ADDRESS_RANGES: u8 = 0x06; //一组用户地址区间*/
-const MS_TYPE_A_SET_OF_NUMBER_RANGES: u8 = 0x07; //一组配置序号区间*/
-const MS_TYPE_ALL_USER_WITHOUT_JC: u8 = 0xF7; //除交采外的所有表 247*/
-const MS_TYPE_A_SET_OF_VIP_USER_BY_PORT: u8 = 0xF8; //一组用户类型区分端口*/
-const MS_TYPE_A_SET_OF_USER_BY_PORT: u8 = 0xF9; //一组用户类型区分端口*/
-const MS_TYPE_A_GROUP_OF_VIP_USER_TYPES: u8 = 0xFB; //一组重点用户类型 251*/
-const MS_TYPE_A_SET_OF_USER_EVENT_LEVELS: u8 = 0xFC; //一组用户事件等级 252*/
-const MS_TYPE_VIP_USER_TYPES: u8 = 0xFD; //重点用户 253*/
-const MS_TYPE_A_SET_OF_USER_PORT_NUMBERS: u8 = 0xFE; //一组用户端口号 254*/
 pub struct SpcialFrame;
 
 impl SpcialFrame {

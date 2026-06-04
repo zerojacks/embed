@@ -8,7 +8,6 @@ use std::io::Read;
 #[cfg(feature = "desktop")]
 use std::path::Path;
 
-use tracing::info;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct MainConfig {

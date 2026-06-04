@@ -1,6 +1,6 @@
-use crate::basefunc::frame_645::Frame645;
 use crate::basefunc::frame_err::CustomError;
 use crate::basefunc::frame_fun::FrameFun;
+use crate::basefunc::frame_645::Frame645;
 use crate::basefunc::protocol::{AnalysicErr, FrameAnalisyic, ProtocolInfo};
 use crate::config::xmlconfig::{ProtocolConfigManager, XmlElement}; // 引入 FrameFun 模块
 use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, NaiveTime};
@@ -3844,39 +3844,38 @@ impl FrameCsg {
         let mut task_name = String::new();
         let mut index = 16 + 9 + start_pos;
 
+        let da = &frame[16..18];
+        let item = &frame[18..22];
+        let point_str = Self::prase_da_data([da[0], da[1]]);
+        let (data_item_elem, cur_data_item) =
+            Self::try_get_item_and_point(item, protocol, region, Some(dir));
+
+        task_name = if let Some(data_item_elem) = data_item_elem {
+            let name = data_item_elem.get_child_text("name").unwrap();
+            format!("{}号： {}", name, cur_data_item)
+        } else {
+            format!("任务号：{}", cur_data_item)
+        };
+
+        FrameFun::add_data(
+            &mut task_result,
+            "信息点标识DA".to_string(),
+            FrameFun::get_data_str_with_space(da),
+            point_str.clone(),
+            vec![start_pos + 16, start_pos + 18],
+            None,
+            None,
+        );
+        FrameFun::add_data(
+            &mut task_result,
+            "数据标识编码DI".to_string(),
+            FrameFun::get_data_str_with_space(item),
+            task_name.clone(),
+            vec![start_pos + 18, start_pos + 22],
+            None,
+            None,
+        );
         if dir == 1 {
-            let da = &frame[16..18];
-            let item = &frame[18..22];
-            let point_str = Self::prase_da_data([da[0], da[1]]);
-            let (data_item_elem, cur_data_item) =
-                Self::try_get_item_and_point(item, protocol, region, Some(dir));
-
-            task_name = if let Some(data_item_elem) = data_item_elem {
-                let name = data_item_elem.get_child_text("name").unwrap();
-                format!("{}号： {}", name, cur_data_item)
-            } else {
-                format!("任务号：{}", cur_data_item)
-            };
-
-            FrameFun::add_data(
-                &mut task_result,
-                "信息点标识DA".to_string(),
-                FrameFun::get_data_str_with_space(da),
-                point_str.clone(),
-                vec![start_pos + 16, start_pos + 18],
-                None,
-                None,
-            );
-            FrameFun::add_data(
-                &mut task_result,
-                "数据标识编码DI".to_string(),
-                FrameFun::get_data_str_with_space(item),
-                task_name.clone(),
-                vec![start_pos + 18, start_pos + 22],
-                None,
-                None,
-            );
-
             let task_kind = frame[22];
             let task_kind_str = match task_kind {
                 0 => "自描述方式",
@@ -3944,6 +3943,41 @@ impl FrameCsg {
                 data_item = cur_data_item;
                 index = 16 + 8 + start_pos;
             }
+        } else {
+            let start_time = &frame[22..22 + 6];
+            let end_time = &frame[22 + 6..22 + 12];
+            let data_dinsty = frame[22 + 12];
+            let start_time_str =
+                FrameFun::parse_time_data(start_time, "CCYYMMDDhhmm", false);
+            let end_time_str = FrameFun::parse_time_data(end_time, "CCYYMMDDhhmm", false);
+            let data_dinsty_str = Self::get_data_dinsty(data_dinsty);
+            FrameFun::add_data(
+                &mut task_result,
+                format!("数据起始时间"),
+                FrameFun::get_data_str_with_space(start_time),
+                start_time_str,
+                vec![start_pos + 22, start_pos + 22 + 6],
+                None,
+                None,
+            );
+            FrameFun::add_data(
+                &mut task_result,
+                format!("数据结束时间"),
+                FrameFun::get_data_str_with_space(end_time),
+                end_time_str,
+                vec![start_pos + 22 + 6, start_pos + 22 + 12],
+                None,
+                None,
+            );
+            FrameFun::add_data(
+                &mut task_result,
+                format!("数据密度"),
+                format!("{:02X}", data_dinsty),
+                format!("数据间隔时间：{}", data_dinsty_str),
+                vec![start_pos + 22 + 12, start_pos + 22 + 12 + 1],
+                None,
+                None,
+            );
         }
 
         let mut pw = false;
@@ -3952,63 +3986,62 @@ impl FrameCsg {
         let data_time: Option<&[u8]> = None;
         let mut point_str: String = String::new();
         let mut dis_data_identifier: String = String::new();
+        if dir == 1 {
+            while pos < length {
+                let result = (|| -> Result<AnalysicErr, Box<dyn Error>> {
+                    if !Self::guest_next_data_is_cur_item_data(
+                        data_item_elem.clone(),
+                        &data_segment[pos..],
+                        data_time,
+                        protocol,
+                        region,
+                        Some(dir),
+                    ) {
+                        let da = &data_segment[pos..pos + 2];
+                        let item = &data_segment[pos + 2..pos + 6];
+                        point_str = Self::prase_da_data([da[0], da[1]]);
+                        let (data_item_elem_opt, cur_data_item) =
+                            Self::try_get_item_and_point(item, protocol, region, Some(dir));
 
-        while pos < length {
-            let result = (|| -> Result<AnalysicErr, Box<dyn Error>> {
-                if !Self::guest_next_data_is_cur_item_data(
-                    data_item_elem.clone(),
-                    &data_segment[pos..],
-                    data_time,
-                    protocol,
-                    region,
-                    Some(dir),
-                ) {
-                    let da = &data_segment[pos..pos + 2];
-                    let item = &data_segment[pos + 2..pos + 6];
-                    point_str = Self::prase_da_data([da[0], da[1]]);
-                    let (data_item_elem_opt, cur_data_item) =
-                        Self::try_get_item_and_point(item, protocol, region, Some(dir));
+                        // info!(
+                        //     "data_item:{:?} {:?} {:?}",
+                        //     data_item_elem_opt, data_segment, item
+                        // );
+                        data_item_elem = data_item_elem_opt.clone();
+                        dis_data_identifier = if data_item_elem_opt.is_some() {
+                            let name = data_item_elem_opt.unwrap().get_child_text("name").unwrap();
+                            format!("数据标识编码：[{}]-{}", cur_data_item, name)
+                        } else {
+                            format!("数据标识编码：[{}]", cur_data_item)
+                        };
+                        data_item = cur_data_item;
+                        FrameFun::add_data(
+                            &mut sub_result,
+                            format!("<第{}组>信息点标识DA", num + 1),
+                            FrameFun::get_data_str_with_space(da),
+                            point_str.clone(),
+                            vec![index + pos, index + pos + 2],
+                            None,
+                            None,
+                        );
+                        pos += 2;
+                        FrameFun::add_data(
+                            &mut sub_result,
+                            format!("<第{}组>数据标识编码DI", num + 1),
+                            FrameFun::get_data_str_with_space(item),
+                            dis_data_identifier.clone(),
+                            vec![index + pos, index + pos + 4],
+                            None,
+                            None,
+                        );
+                        pos += 4;
+                    }
 
-                    // info!(
-                    //     "data_item:{:?} {:?} {:?}",
-                    //     data_item_elem_opt, data_segment, item
-                    // );
-                    data_item_elem = data_item_elem_opt.clone();
-                    dis_data_identifier = if data_item_elem_opt.is_some() {
-                        let name = data_item_elem_opt.unwrap().get_child_text("name").unwrap();
-                        format!("数据标识编码：[{}]-{}", cur_data_item, name)
-                    } else {
-                        format!("数据标识编码：[{}]", cur_data_item)
-                    };
-                    data_item = cur_data_item;
-                    FrameFun::add_data(
-                        &mut sub_result,
-                        format!("<第{}组>信息点标识DA", num + 1),
-                        FrameFun::get_data_str_with_space(da),
-                        point_str.clone(),
-                        vec![index + pos, index + pos + 2],
-                        None,
-                        None,
-                    );
-                    pos += 2;
-                    FrameFun::add_data(
-                        &mut sub_result,
-                        format!("<第{}组>数据标识编码DI", num + 1),
-                        FrameFun::get_data_str_with_space(item),
-                        dis_data_identifier.clone(),
-                        vec![index + pos, index + pos + 4],
-                        None,
-                        None,
-                    );
-                    pos += 4;
-                }
-
-                let mut item_data: Vec<Value> = Vec::new();
-                let mut sub_length = 0;
-                let mut sub_datament: &[u8] = &[];
-                // info!("dir {:} item{:?}", dir, data_item_elem);
-                if let Some(mut item_elem) = data_item_elem.clone() {
-                    if dir == 1 {
+                    let mut item_data: Vec<Value> = Vec::new();
+                    let mut sub_length = 0;
+                    let mut sub_datament: &[u8] = &[];
+                    // info!("dir {:} item{:?}", dir, data_item_elem);
+                    if let Some(mut item_elem) = data_item_elem.clone() {
                         let sub_length_cont = item_elem.get_child_text("length").unwrap();
                         (sub_length, sub_datament) = if sub_length_cont.to_uppercase() == "UNKNOWN"
                         {
@@ -4048,12 +4081,8 @@ impl FrameCsg {
                             index + pos,
                             Some(dir),
                         );
-                    } else {
-                        sub_length = 0;
                     }
-                }
 
-                if dir == 1 {
                     let new_point_str = point_str.clone().replace("Pn=", "");
                     let new_dis_str: String =
                         dis_data_identifier.clone().replace("数据标识编码：", "");
@@ -4078,70 +4107,32 @@ impl FrameCsg {
                         None,
                     );
                     pos += 5;
-                } else {
-                    let start_time = &data_segment[pos..pos + 6];
-                    let end_time = &data_segment[pos + 6..pos + 12];
-                    let data_dinsty = data_segment[pos + 12];
-                    let start_time_str =
-                        FrameFun::parse_time_data(start_time, "CCYYMMDDhhmm", false);
-                    let end_time_str = FrameFun::parse_time_data(end_time, "CCYYMMDDhhmm", false);
-                    let data_dinsty_str = Self::get_data_dinsty(data_dinsty);
-                    FrameFun::add_data(
-                        &mut task_result,
-                        format!("数据起始时间"),
-                        FrameFun::get_data_str_with_space(start_time),
-                        start_time_str,
-                        vec![index + pos, index + pos + 6],
-                        None,
-                        None,
-                    );
-                    FrameFun::add_data(
-                        &mut task_result,
-                        format!("数据结束时间"),
-                        FrameFun::get_data_str_with_space(end_time),
-                        end_time_str,
-                        vec![index + pos + 6, index + pos + 12],
-                        None,
-                        None,
-                    );
-                    FrameFun::add_data(
-                        &mut task_result,
-                        format!("数据密度"),
-                        format!("{:02X}", data_dinsty),
-                        format!("数据间隔时间：{}", data_dinsty_str),
-                        vec![index + pos + 12, index + pos + 13],
-                        None,
-                        None,
-                    );
-                    pos += 13;
-                }
 
-                pos += sub_length;
-                num += 1;
-                info!(
-                    "num:{:?} length{:?} pos{:?} item_count * pncount{:?}",
-                    num,
-                    length,
-                    pos,
-                    item_count * pncount
-                );
-                if ((length - pos == 16) || (length - pos == 22)) && (num == item_count * pncount) {
-                    info!("pw:{:?} pw_data:{:?}", pw, pw_data);
-                    pw = Self::guest_is_exit_pw(
+                    pos += sub_length;
+                    num += 1;
+                    info!(
+                        "num:{:?} length{:?} pos{:?} item_count * pncount{:?}",
+                        num,
                         length,
-                        pw_data,
-                        data_item_elem.clone(),
-                        data_time,
-                        true,
-                        protocol,
-                        region,
-                        Some(dir),
+                        pos,
+                        item_count * pncount
                     );
-                    if pw {
-                        length -= 16;
+                    if ((length - pos == 16) || (length - pos == 22)) && (num == item_count * pncount) {
+                        info!("pw:{:?} pw_data:{:?}", pw, pw_data);
+                        pw = Self::guest_is_exit_pw(
+                            length,
+                            pw_data,
+                            data_item_elem.clone(),
+                            Some(data_time),
+                            true,
+                            protocol,
+                            region,
+                            Some(dir),
+                        );
+                        if pw {
+                            length -= 16;
+                        }
                     }
-                }
-                if dir == 1 {
                     if num >= (item_count * pncount) {
                         return Ok(AnalysicErr::ErrLength);
                     }
@@ -4149,7 +4140,7 @@ impl FrameCsg {
                         && (!Self::guest_next_data_is_cur_item_data(
                             data_item_elem.clone(),
                             &data_segment[pos..],
-                            data_time,
+                            Some(data_time),
                             protocol,
                             region,
                             Some(dir),
@@ -4157,26 +4148,24 @@ impl FrameCsg {
                     {
                         return Ok(AnalysicErr::ErrLength);
                     }
-                }
-                Ok(AnalysicErr::ErrOk)
-            })();
+                    Ok(AnalysicErr::ErrOk)
+                })();
 
-            match result {
-                Ok(res) => match res {
-                    AnalysicErr::ErrOk => {}
-                    AnalysicErr::ErrLength => break,
-                    _ => {}
-                },
-                Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
-                    break;
+                match result {
+                    Ok(res) => match res {
+                        AnalysicErr::ErrOk => {}
+                        AnalysicErr::ErrLength => break,
+                        _ => {}
+                    },
+                    Err(e) => {
+                        let err_str = format!("数据解析失败!").to_string();
+                        let err = CustomError::new(1, err_str);
+                        break;
+                    }
                 }
             }
-        }
 
-        if dir == 1 {
-            FrameFun::add_data(
+                        FrameFun::add_data(
                 &mut task_result,
                 "任务数据内容".to_string(),
                 FrameFun::get_data_str_with_space(&valid_data_segment[6..]),

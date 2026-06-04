@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fs::File;
 #[cfg(feature = "desktop")]
 use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use lazy_static::lazy_static;
