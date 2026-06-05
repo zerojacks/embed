@@ -31,7 +31,7 @@ impl FrameAnalyzer {
     pub fn new() -> FrameAnalyzer {
         // Initialize logger for WASM
         crate::logger::init_logger();
-        TaskOadConfigManager::default();
+        let _ = TaskOadConfigManager::default();
         FrameAnalyzer {
             // No region field to initialize
         }

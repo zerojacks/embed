@@ -31,7 +31,9 @@ pub struct XmlNode {
     children: Vec<usize>,  // 子节点的索引列表
 
     // 用于快速查找的索引
+    #[allow(dead_code)]
     depth: u32,   // 节点深度
+    #[allow(dead_code)]
     path: String, // 从根节点到当前节点的路径
 }
 
@@ -331,6 +333,7 @@ impl XmlElement {
 
 #[derive(Debug)]
 pub struct XmlConfig {
+    #[allow(dead_code)]
     root: XmlElement,
 }
 

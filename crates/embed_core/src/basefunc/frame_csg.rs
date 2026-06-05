@@ -2782,7 +2782,7 @@ impl FrameCsg {
                             Some(dir),
                         );
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     };
 
                     let name = data_item_elem.get_child_text("name").unwrap();
@@ -2869,7 +2869,7 @@ impl FrameCsg {
                         let err = CustomError::new(1, err_str);
                         return Err(Box::new(err));
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
 
                     let dis_data_identifier = format!("数据标识编码：[{}]", data_item);
@@ -3046,7 +3046,7 @@ impl FrameCsg {
                             Some(dir),
                         );
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
 
                     let name = data_item_elem.get_child_text("name").unwrap();
@@ -3132,7 +3132,7 @@ impl FrameCsg {
                         let err = CustomError::new(1, err_str);
                         return Err(err);
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
 
                     let dis_data_identifier = format!("数据标识编码：[{}]", data_item);
@@ -3151,9 +3151,8 @@ impl FrameCsg {
 
             match result {
                 Ok(_) => {}
-                Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
+                Err(_e) => {
+                    error!("数据解析失败!");
                     break;
                 }
             }
@@ -3245,9 +3244,7 @@ impl FrameCsg {
         let mut pw = false;
         let data_segment = &valid_data_segment[..length];
         let mut data_item_elem: Option<XmlElement> = None;
-        let sub_length: usize;
         let mut last_data_time: Option<&[u8]> = None;
-        let sub_pos: usize;
         let mut point_str: String = String::new();
         let mut dis_data_identifier: String = String::new();
         while pos < length {
@@ -3358,7 +3355,7 @@ impl FrameCsg {
                     }
                 } else {
                     if dir == 1 && prm == 0 {
-                        let sub_length = length;
+                        let _sub_length = length;
                         pw = Self::guest_is_exit_pw(
                             length,
                             &pw_data,
@@ -3373,7 +3370,7 @@ impl FrameCsg {
                         let err = CustomError::new(1, err_str);
                         return Err(err);
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
                 }
 
@@ -3467,8 +3464,7 @@ impl FrameCsg {
             match result {
                 Ok(_) => {}
                 Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
+                    error!("数据解析失败! {:?}", e);
                     break;
                 }
             }
@@ -3739,8 +3735,7 @@ impl FrameCsg {
             match result {
                 Ok(_) => {}
                 Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
+                    error!("数据解析失败!{:?}", e);
                     break;
                 }
             }
@@ -3788,7 +3783,7 @@ impl FrameCsg {
     pub fn analysic_csg_read_task_frame(
         frame: &[u8],
         dir: u8,
-        prm: u8,
+        _prm: u8,
         result_list: &mut Vec<Value>,
         start_pos: usize,
         protocol: &str,
@@ -3833,7 +3828,6 @@ impl FrameCsg {
         let mut pncount = 0;
         let mut item_count = 0;
 
-        let mut task_name = String::new();
         let mut index = 16 + 9 + start_pos;
 
         let da = &frame[16..18];
@@ -3842,7 +3836,7 @@ impl FrameCsg {
         let (data_item_elem, cur_data_item) =
             Self::try_get_item_and_point(item, protocol, region, Some(dir));
 
-        task_name = if let Some(data_item_elem) = data_item_elem {
+        let task_name = if let Some(data_item_elem) = data_item_elem {
             let name = data_item_elem.get_child_text("name").unwrap();
             format!("{}号： {}", name, cur_data_item)
         } else {
@@ -3895,7 +3889,7 @@ impl FrameCsg {
                 Some(dir),
             );
             info!("data_item_elem:{:?}", data_item_elem);
-            if let Some(data_item_elem) = data_item_elem {
+            if let Some(_data_item_elem) = data_item_elem {
                 pncount = frame[23];
                 item_count = frame[24];
                 FrameFun::add_data(
@@ -4150,14 +4144,13 @@ impl FrameCsg {
                         _ => {}
                     },
                     Err(e) => {
-                        let err_str = format!("数据解析失败!").to_string();
-                        let err = CustomError::new(1, err_str);
+                        error!("数据解析失败!{:?}", e);
                         break;
                     }
                 }
             }
 
-                        FrameFun::add_data(
+            FrameFun::add_data(
                 &mut task_result,
                 "任务数据内容".to_string(),
                 FrameFun::get_data_str_with_space(&valid_data_segment[6..]),
@@ -4224,7 +4217,7 @@ impl FrameCsg {
     pub fn analysic_csg_read_alarm_frame(
         frame: &[u8],
         dir: u8,
-        prm: u8,
+        _prm: u8,
         result_list: &mut Vec<Value>,
         start_pos: usize,
         protocol: &str,
@@ -4333,7 +4326,7 @@ impl FrameCsg {
                             Some(dir),
                         );
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
 
                     let name = data_item_elem.get_child_text("name").unwrap();
@@ -4355,7 +4348,7 @@ impl FrameCsg {
                         let err = CustomError::new(1, err_str);
                         return Err(err);
                     } else {
-                        let sub_length = 0;
+                        let _sub_length = 0;
                     }
                     dis_data_identifier = format!("数据标识编码：[{}]", data_item);
                 }
@@ -4443,8 +4436,7 @@ impl FrameCsg {
             })() {
                 Ok(_) => {}
                 Err(e) => {
-                    let err_str = format!("数据解析失败!").to_string();
-                    let err = CustomError::new(1, err_str);
+                    error!("数据解析失败!{:?}", e);
                     break;
                 }
             }
@@ -4590,7 +4582,7 @@ impl FrameCsg {
                         Some(dir),
                     );
                 } else {
-                    let sub_length = 0; // 下行读取报文
+                    let _sub_length = 0; // 下行读取报文
                 }
                 let name = data_item_elem.get_child_text("name").unwrap();
                 dis_data_identifier = format!("数据标识编码：[{}]-{}", data_item, name);
@@ -4606,12 +4598,10 @@ impl FrameCsg {
                         region,
                         Some(dir),
                     );
-                    let err_str =
-                        format!("未找到数据标识{},请检查配置文件!", data_item).to_string();
-                    let err = CustomError::new(1, err_str);
+                    error!("未找到数据标识{},请检查配置文件!", data_item);
                     break;
                 } else {
-                    let sub_length = 0;
+                    let _sub_length = 0;
                 }
                 dis_data_identifier = format!("数据标识编码：[{}]", data_item);
             }
@@ -4804,9 +4794,9 @@ impl FrameCsg {
             let data_item_elem =
                 ProtocolConfigManager::get_config_xml(&data_item, protocol, region, Some(dir));
 
-            let mut item_data: Vec<Value> = Vec::new();
-            let mut sub_length = 0;
-            let mut sub_datament: &[u8] = &[];
+            let item_data: Vec<Value>;
+            let sub_length: usize;
+            let sub_datament: &[u8];
 
             if let Some(mut data_item_elem) = data_item_elem {
                 if dir == 1 && prm == 0 {

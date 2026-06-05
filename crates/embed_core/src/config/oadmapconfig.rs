@@ -40,6 +40,7 @@ pub struct SubConfig {
 
 #[derive(Debug)]
 pub struct CompleteConfig {
+    #[allow(dead_code)]
     main_config: MainConfig,
     sub_configs: HashMap<String, SubConfig>,
 }
